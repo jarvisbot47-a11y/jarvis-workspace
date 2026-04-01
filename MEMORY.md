@@ -39,3 +39,10 @@ _Last updated: 2026-03-29_
 
 ## Workflow Skills Installed
 - research-workflow, browser-automation-suite, data-processing, github-management, content-creation, codex-orchestrator (in ~/.openclaw/workspace/skills/)
+
+## GitHub Repos (updated 2026-03-31)
+- **Primary:** https://github.com/jarvisbot47-a11y/jarvis-workspace (NEW — clean repo)
+- **Old:** https://github.com/jarvisbot47-a11y/jarvis-032426 (OLD — has large file issues, avoid)
+- Clone: `git clone https://github.com/jarvisbot47-a11y/jarvis-workspace.git`
+- After clone: run `setup-apps.sh` to decompress Caprine + Marketing Manager binaries
+- Large apps stored as compressed chunks in `app-binaries/` (split to <100MB per file)
