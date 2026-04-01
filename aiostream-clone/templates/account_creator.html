@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Account Creator - Marketing Manager{% endblock %}
+{% block page_title %}🔐 Bulk Account Creator{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .info-box { background: var(--bg-card-hover); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+        .info-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+        .info-box ul { list-style: none; padding: 0; }
+        .info-box ul li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+        .info-box ul li:last-child { border-bottom: none; }
+        .progress-bar { height: 8px; background: var(--bg-dark); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+        #bulkResults { margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        .result-item { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .result-item.success { color: var(--success); }
+        .result-item.error { color: var(--danger); }
+    
+    </style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>🔐 Bulk Account Creator</h2></div>
+        <div class="page-content">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><h3>⚡ Bulk Create Accounts</h3></div>
+                    <form id="bulkCreateForm">
+                        <div class="form-group"><label>Platform</label><select class="form-control" name="platform" id="bulk_platform" required>{% for p in platforms %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
+                        <div class="form-row-3">
+                            <div class="form-group"><label>Email Provider</label><select class="form-control" name="email_provider" id="bulk_email_provider"><option value="gmail">Gmail</option><option value="yahoo">Yahoo</option><option value="outlook">Outlook</option><option value="custom">Custom Domain</option></select></div>
+                            <div class="form-group"><label>Quantity (max 50)</label><input class="form-control" name="quantity" id="bulk_quantity" type="number" min="1" max="50" value="5"></div>
+                            <div class="form-group"><label>Password</label><input class="form-control" name="password" id="bulk_password" type="password" placeholder="TempPass123!"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Base Username</label><input class="form-control" name="base_username" id="bulk_username" placeholder="musiclover" value="musiclover"></div>
+                            <div class="form-group"><label>Custom Domain (if custom)</label><input class="form-control" name="domain" id="bulk_domain" placeholder="yourdomain.com" value="gmail.com"></div>
+                        </div>
+                        <div class="form-group"><label>Bind Proxy (optional)</label><select class="form-control" name="proxy_id" id="bulk_proxy"><option value="">— None —</option>{% for p in proxies %}<option value="{{ p.id }}">{{ p.proxy_string[:40] }} ({{ p.country }})</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Bind Anti-Detect Profile</label><select class="form-control" name="profile_id" id="bulk_profile"><option value="">— Default —</option>{% for pr in profiles %}<option value="{{ pr.id }}">{{ pr.name }}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Bind Emulator Instance</label><select class="form-control" name="emulator_id" id="bulk_emulator"><option value="">— None —</option>{% for e in emulators %}<option value="{{ e.id }}">{{ e.name }} ({{ e.android_version }})</option>{% endfor %}</select></div>
+                        <div style="display:flex; gap:12px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1" id="bulkCreateBtn">🚀 Generate {{ accounts|length + 1 }} Accounts</button>
+                        </div>
+                    </form>
+                    <div id="bulkResults"></div>
+                </div>
+                <div>
+                    <div class="info-box" style="margin-bottom:24px;">
+                        <h4>📋 Supported Platforms</h4>
+                        <ul>
+                            {% for p in platforms %}<li>✅ {{ p }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h4>⚠️ Usage Guidelines</h4>
+                        <ul>
+                            <li>🔒 Use unique strong passwords per batch</li>
+                            <li>🌐 Bind proxies for geo-targeted accounts</li>
+                            <li>📱 Use emulators for mobile app accounts</li>
+                            <li>🛡️ Anti-detect profiles reduce bans</li>
+                            <li>📊 Monitor account health in Streaming Accounts</li>
+                            <li>🔄 Rotate passwords regularly for security</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+document.getElementById('bulkCreateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('bulkCreateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating...';
+            const resultsDiv = document.getElementById('bulkResults');
+            resultsDiv.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-dim)">Processing bulk creation...</div>';
+            const data = {
+                platform: document.getElementById('bulk_platform').value,
+                email_provider: document.getElementById('bulk_email_provider').value,
+                quantity: parseInt(document.getElementById('bulk_quantity').value),
+                base_username: document.getElementById('bulk_username').value,
+                base_email: 'user',
+                domain: document.getElementById('bulk_domain').value,
+                password: document.getElementById('bulk_password').value,
+                proxy_id: document.getElementById('bulk_proxy').value || null,
+                profile_id: document.getElementById('bulk_profile').value || null,
+                emulator_id: document.getElementById('bulk_emulator').value || null
+            };
+            try {
+                const res = await fetch('/account-creator/bulk', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                let html = `<div style="margin-bottom:16px; padding:12px; background:var(--bg-dark); border-radius:8px;">
+                    <strong>Created ${result.successful}/${result.total} accounts successfully</strong>
+                </div>`;
+                result.results.forEach(r => {
+                    html += `<div class="result-item ${r.success ? 'success' : 'error'}">
+                        <span>${r.success ? '✅' : '❌'} ${r.email || r.username}</span>
+                        <span>${r.success ? 'Created' : r.error}</span>
+                    </div>`;
+                });
+                resultsDiv.innerHTML = html;
+            } catch(err) {
+                resultsDiv.innerHTML = `<div style="color:var(--danger); padding:20px;">Error: ${err.message}</div>`;
+            }
+            btn.disabled = false;
+            btn.textContent = '🚀 Generate Accounts';
+        });
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns - Marketing Manager{% endblock %}
+{% block page_title %}Campaigns{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;">
+    <button class="btn btn-primary" onclick="openModal('modal-new-campaign')">+ New Campaign</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label">Active</div>
+        <div class="stat-value" style="color:var(--success);">{{ stats.active or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Planned</div>
+        <div class="stat-value" style="color:var(--warning);">{{ stats.planned or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value">{{ stats.completed or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total</div>
+        <div class="stat-value" style="color:var(--accent);">{{ campaigns | length }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>All Campaigns</h3>
+    </div>
+    {% if campaigns %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Platforms</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in campaigns %}
+                <tr>
+                    <td><strong>{{ c.name }}</strong></td>
+                    <td>
+                        {% if c.platforms %}
+                        {% set plats = c.platforms if c.platforms is string else c.platforms %}
+                        {% for p in plats %}
+                        <span class="platform-badge" style="margin-right:3px;">{{ p }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td>{{ c.start_date or '—' }}</td>
+                    <td>{{ c.end_date or '—' }}</td>
+                    <td>
+                        {% if c.status == 'active' %}
+                        <span class="badge badge-active">Active</span>
+                        {% elif c.status == 'planned' %}
+                        <span class="badge badge-pending">Planned</span>
+                        {% elif c.status == 'completed' %}
+                        <span class="badge badge-noresponse">Completed</span>
+                        {% else %}
+                        <span class="badge badge-{{ c.status }}">{{ c.status or 'draft' }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width:200px;"><span style="font-size:12px;color:var(--text-dim);">{{ c.description | truncate(50, true) if c.description else '—' }}</span></td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="/media-library/campaign/{{ c.id }}" class="btn btn-sm btn-secondary">Media</a>
+                            <form action="/campaign/{{ c.id }}/delete" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Del</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-dim);padding:40px;text-align:center;">No campaigns yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="modal-new-campaign">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>New Campaign</h3>
+            <button class="modal-close" onclick="closeModal('modal-new-campaign')">&times;</button>
+        </div>
+        <form action="/campaign/add" method="POST">
+            <div class="form-group">
+                <label>Campaign Name</label>
+                <input type="text" name="name" class="form-control" required placeholder="Memento Mori Vol. 2 Launch">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" name="start_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="date" name="end_date" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Target Platforms</label>
+                <div style="display:flex;gap:15px;margin-top:5px;">
+                    <label><input type="checkbox" name="platforms" value="instagram" checked> Instagram</label>
+                    <label><input type="checkbox" name="platforms" value="tiktok" checked> TikTok</label>
+                    <label><input type="checkbox" name="platforms" value="youtube"> YouTube</label>
+                    <label><input type="checkbox" name="platforms" value="facebook"> Facebook</label>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-campaign')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Campaign</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

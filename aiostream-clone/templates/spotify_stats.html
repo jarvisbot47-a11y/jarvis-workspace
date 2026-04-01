@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}Spotify Stats - Mystik Singh{% endblock %}
+{% block page_title %}🎧 Spotify for Artists{% endblock %}
+
+{% block topbar_actions %}
+<a href="https://open.spotify.com/artist/6w6er0yLYxlwV5JHr7rK7B" target="_blank" class="btn btn-secondary btn-sm">&#127760; Open Spotify for Artists</a>
+{% endblock %}
+
+{% block content %}
+<style>
+    .spotify-header { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; }
+    .spotify-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--accent-glow); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .spotify-info h2 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .spotify-info p { color: var(--text-dim); font-size: 13px; }
+    .spotify-verified { color: #1DB954; font-size: 14px; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 24px; }
+    .stat-card .stat-icon { font-size: 24px; margin-bottom: 8px; }
+    .stat-card .stat-change { font-size: 11px; color: var(--success); margin-top: 4px; }
+    .stat-card .stat-change.neg { color: var(--danger); }
+    .chart-card { margin-bottom: 24px; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; margin-top: 16px; }
+    .chart-bar { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; min-width: 20px; transition: all 0.3s; }
+    .chart-bar:hover { background: #d4b36a; }
+    .platform-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 24px; }
+    .platform-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .platform-card .platform-icon { font-size: 28px; margin-bottom: 10px; }
+    .table-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--accent-glow); color: var(--accent); }
+    .tab-bar { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+    .tab-btn { padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--text-dim); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .country-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .country-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; }
+    .country-flag { font-size: 20px; }
+    .country-info { flex: 1; }
+    .country-name { font-size: 13px; font-weight: 600; }
+    .country-streams { font-size: 12px; color: var(--text-dim); }
+    .country-bar-wrap { width: 80px; height: 6px; background: var(--bg-dark); border-radius: 3px; }
+    .country-bar { height: 6px; background: var(--accent); border-radius: 3px; }
+</style>
+
+<div class="spotify-header">
+    <div class="spotify-avatar">&#127911;</div>
+    <div class="spotify-info">
+        <h2>Mystik Singh <span class="spotify-verified">&#10003;</span></h2>
+        <p>Hip Hop &middot; Artist &middot; <a href="https://open.spotify.com/artist/6w6er0yLYxlwV5JHr7rK7B" target="_blank" style="color: var(--accent);">Open Spotify Profile</a></p>
+        <p style="margin-top: 4px; font-size: 12px; color: var(--accent);">&#63743; Spotify for Artists · Real-time data</p>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Monthly Listeners</div>
+        <div class="stat-value">{{ stats.monthly_listeners|default("—") }}</div>
+        <div class="stat-change">+{{ stats.listeners_growth|default("0") }}% vs last month</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Streams (28 days)</div>
+        <div class="stat-value">{{ stats.streams_28d|default("—") }}</div>
+        <div class="stat-change">+{{ stats.streams_growth|default("0") }}% vs last period</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Followers</div>
+        <div class="stat-value">{{ stats.followers|default("—") }}</div>
+        <div class="stat-change">+{{ stats.followers_growth|default("0") }} this week</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Save Rate</div>
+        <div class="stat-value">{{ stats.save_rate|default("—") }}%</div>
+        <div class="stat-change">{{ stats.save_rate_label|default("—" ) }}</div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Audience Demographics -->
+    <div class="card chart-card">
+        <div class="card-header"><h3>&#128101; Top Countries</h3></div>
+        <div class="country-grid">
+            {% for country in stats.top_countries %}
+            <div class="country-item">
+                <span class="country-flag">{{ country.flag }}</span>
+                <div class="country-info">
+                    <div class="country-name">{{ country.name }}</div>
+                    <div class="country-streams">{{ country.streams }} streams</div>
+                </div>
+                <div class="country-bar-wrap">
+                    <div class="country-bar" style="width: {{ country.pct }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sources Breakdown -->
+    <div class="card chart-card">
+        <div class="card-header"><h3>&#128279; Traffic Sources</h3></div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+            {% for source in stats.sources %}
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="width: 140px; font-size: 13px; color: var(--text-dim);">{{ source.name }}</span>
+                <div style="flex: 1; height: 8px; background: var(--bg-dark); border-radius: 4px;">
+                    <div style="width: {{ source.pct }}%; height: 8px; background: var(--accent); border-radius: 4px;"></div>
+                </div>
+                <span style="width: 40px; text-align: right; font-size: 13px; font-weight: 600;">{{ source.pct }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="showTab('audience')">Audience</button>
+    <button class="tab-btn" onclick="showTab('tracks')">Top Tracks</button>
+    <button class="tab-btn" onclick="showTab('playlists')">Playlist Adds</button>
+</div>
+
+<div id="tab-overview" class="tab-content active">
+    <div class="card">
+        <div class="card-header"><h3>Streams Over Time (Last 28 Days)</h3></div>
+        <div class="chart-bars">
+            {% for bar in stats.streams_chart %}
+            <div class="chart-bar" style="height: {{ bar.height }}%;" title="{{ bar.date }}: {{ bar.streams }} streams"></div>
+            {% endfor %}
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--text-dim);">
+            <span>28 days ago</span><span>Today</span>
+        </div>
+    </div>
+</div>
+
+<div id="tab-audience" class="tab-content">
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header"><h3>Age & Gender</h3></div>
+            <div style="display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;">
+                {% for demo in stats.demographics %}
+                <div style="text-align: center; min-width: 80px;">
+                    <div style="font-size: 22px; font-weight: 700;">{{ demo.pct }}%</div>
+                    <div style="font-size: 12px; color: var(--text-dim);">{{ demo.label }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>Platforms</h3></div>
+            <div class="platform-row" style="grid-template-columns: 1fr 1fr 1fr; margin: 0;">
+                {% for plat in stats.platforms %}
+                <div class="platform-card" style="padding: 14px;">
+                    <div class="platform-icon">{{ plat.icon }}</div>
+                    <div style="font-size: 20px; font-weight: 700;">{{ plat.pct }}%</div>
+                    <div style="font-size: 11px; color: var(--text-dim);">{{ plat.name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab-tracks" class="tab-content">
+    <div class="card">
+        <div class="card-header"><h3>Top Tracks by Streams</h3></div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Track</th>
+                        <th>Album</th>
+                        <th>Streams</th>
+                        <th>Listeners</th>
+                        <th>Save Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for track in stats.top_tracks %}
+                    <tr>
+                        <td style="color: var(--accent); font-weight: 700;">{{ loop.index }}</td>
+                        <td><strong>{{ track.title }}</strong></td>
+                        <td style="color: var(--text-dim);">{{ track.album }}</td>
+                        <td>{{ track.streams }}</td>
+                        <td>{{ track.listeners }}</td>
+                        <td><span class="table-chip">{{ track.save_rate }}%</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="tab-playlists" class="tab-content">
+    <div class="card">
+        <div class="card-header"><h3>Playlist Placements</h3></div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Playlist</th>
+                        <th>Track</th>
+                        <th>Streams from Playlist</th>
+                        <th>Listeners</th>
+                        <th>Added</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pl in stats.playlists %}
+                    <tr>
+                        <td><strong>{{ pl.name }}</strong></td>
+                        <td>{{ pl.track }}</td>
+                        <td>{{ pl.streams }}</td>
+                        <td>{{ pl.listeners }}</td>
+                        <td style="color: var(--text-dim); font-size: 12px;">{{ pl.added_date }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

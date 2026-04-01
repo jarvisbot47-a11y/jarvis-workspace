@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Pitch Composer - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Pitch Composer{% endblock %}
+
+{% block content %}
+<div class="compose-layout">
+    <!-- Main Editor -->
+    <div>
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3>Compose Your Pitch</h3>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary btn-sm" onclick="fillFromTemplate()">📝 Use Template</button>
+                    <button class="btn btn-secondary btn-sm" onclick="copyEmail()">📋 Copy</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Subject Line</label>
+                <input type="text" id="email-subject" class="form-control" placeholder="Email subject line..." value="">
+            </div>
+            <div class="form-group">
+                <label>Email Body</label>
+                <textarea id="email-body" class="form-control" style="min-height: 350px; font-family: monospace; font-size: 13px;" placeholder="Write your pitch here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="compose-sidebar">
+        <!-- Quick Fill -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3>⚡ Quick Fill</h3>
+            </div>
+            <div class="form-group">
+                <label>Curator</label>
+                <select id="fill-curator" class="form-control" onchange="fillCuratorInfo()">
+                    <option value="">Select curator...</option>
+                    {% for c in curators %}
+                    <option value="{{ c.id }}" data-email="{{ c.email or '' }}" data-name="{{ c.name }}" data-playlist="{{ c.playlist_name or '' }}" data-genre="{{ c.genre_focus or '' }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Track</label>
+                <select id="fill-track" class="form-control">
+                    <option value="">Select track...</option>
+                    {% for a in albums %}
+                    <optgroup label="{{ a.title }}">
+                        <option value="{{ a.id }}" data-album="{{ a.title }}">Entire Album - {{ a.title }}</option>
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Template</label>
+                <select id="fill-template" class="form-control" onchange="applyTemplate()">
+                    <option value="">— Choose a template —</option>
+                    {% for key, name in template_names.items() %}
+                    <option value="{{ key }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button onclick="autoFill()" class="btn btn-primary" style="width: 100%;">🚀 Auto-Fill Email</button>
+        </div>
+
+        <!-- Variable Reference -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3>📋 Variable Reference</h3>
+            </div>
+            <div style="font-size: 12px; color: var(--text-dim); line-height: 1.8;">
+                <div><code style="color: var(--accent);">{curator_name}</code> — Curator's name</div>
+                <div><code style="color: var(--accent);">{playlist_name}</code> — Playlist name</div>
+                <div><code style="color: var(--accent);">{artist_name}</code> — Mystik Singh</div>
+                <div><code style="color: var(--accent);">{track_title}</code> — Selected track</div>
+                <div><code style="color: var(--accent);">{location}</code> — Los Angeles, CA</div>
+                <div><code style="color: var(--accent);">{track_link}</code> — Spotify/Apple link</div>
+                <div><code style="color: var(--accent);">{website}</code> — Your website</div>
+                <div><code style="color: var(--accent);">{social_link}</code> — Social handle</div>
+            </div>
+        </div>
+
+        <!-- Send Info -->
+        <div class="card">
+            <div class="card-header">
+                <h3>✉️ Ready to Send</h3>
+            </div>
+            <div class="form-group">
+                <label>Curator Email</label>
+                <input type="email" id="send-to" class="form-control" placeholder="curator@email.com" readonly>
+            </div>
+            <a id="mailto-link" href="#" class="btn btn-primary" style="width: 100%; display: block; text-align: center;">
+                Open in Email Client
+            </a>
+            <p style="font-size: 11px; color: var(--text-dim); margin-top: 10px; text-align: center;">
+                After sending, update submission status in the Submissions tab.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const artist = {
+    name: 'Mystik Singh',
+    location: 'Los Angeles, CA',
+    website: 'mystiksingh.com',
+    social: '@mystiksingh',
+    spotify: 'https://open.spotify.com/artist/mystiksingh'
+};
+
+const templates = {{ template_names|tojson }};
+
+// Template bodies
+const templateBodies = {
+    "standard": {
+        subject: "New Track: {track_title} by {artist_name}",
+        body: `Hi {curator_name},
+
+I hope this message finds you well. My name is {artist_name}, an independent hip hop artist from {location}.
+
+I recently released a new track called "{track_title}" and I think it would be a great fit for your {playlist_name} playlist.
+
+The track features hard-hitting 808s over a cinematic sample and explores themes of resilience and self-reflection. I've attached a Spotify/Apple Music link below for your review:
+
+{track_link}
+
+If you have any questions or need additional material (high-quality audio file, press kit, etc.), please don't hesitate to ask.
+
+Thanks so much for your time and for the work you do supporting independent artists!
+
+Best regards,
+{artist_name}
+{website}
+{social}`
+    },
+    "short": {
+        subject: "{track_title} – {artist_name} (Submission for {playlist_name})",
+        body: `Hey {curator_name},
+
+{artist_name} here – just dropped "{track_title}" and thought it might vibe with your {playlist_name} playlist.
+
+Dark, cinematic hip hop with hard bars and atmospheric production. Perfect for late-night drives or deep focus sessions.
+
+Listen: {track_link}
+
+No pressure if it's not the right fit. Thanks for listening!
+
+{artist_name}`
+    },
+    "conscious": {
+        subject: "Lyrically-Driven Hip Hop: {track_title} for {playlist_name}",
+        body: `Hi {curator_name},
+
+I wanted to reach out about my latest release, "{track_title}" – a lyrically-driven hip hop track that I believe aligns with the thoughtful curation of {playlist_name}.
+
+The song touches on {theme}, with bars that dig into personal growth and survival. Production-wise, it's built around a moody, sample-driven instrumental giving it a cinematic feel.
+
+I've been building a loyal underground following with releases like the Memento Mori trilogy (3 albums), and I'm always looking to connect with curators who care about substance over hype.
+
+Listen: {track_link}
+
+Would love to hear your thoughts. Happy to provide any additional materials!
+
+Thanks for your time,
+{artist_name}
+{website}`
+    },
+    "aggressive": {
+        subject: "{track_title} – Heavy 808s & Hard Bars for {playlist_name}",
+        body: `Yo {curator_name},
+
+{artist_name} coming at you with "{track_title}" – this one's got earth-shaking 808s and hard-hitting drums for days.
+
+This track is for listeners who want raw, unfiltered energy. Perfect for your {playlist_name} playlist if you're looking to add serious heat.
+
+Hit this link to stream: {track_link}
+
+Let me know if you need the WAV file or any other assets.
+
+{artist_name}
+{social}`
+    },
+    "follow_up": {
+        subject: "Re: {track_title} – Still Interested? ({artist_name})",
+        body: `Hi {curator_name},
+
+Just bumping my earlier message about "{track_title}" – no pressure at all if it's not the right fit!
+
+I wanted to mention that since releasing it, the track has been gaining organic traction and is resonating with fans of underground hip hop.
+
+If {playlist_name} isn't the right home for it, do you know any other curators I should reach out to?
+
+Either way, thanks for your time and keep doing what you do – playlists like yours are how underground artists get discovered.
+
+Best,
+{artist_name}`
+    }
+};
+
+function applyTemplate() {
+    const key = document.getElementById('fill-template').value;
+    if (!key || !templateBodies[key]) return;
+    document.getElementById('email-subject').value = templateBodies[key].subject;
+    document.getElementById('email-body').value = templateBodies[key].body;
+}
+
+function fillCuratorInfo() {
+    const sel = document.getElementById('fill-curator');
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt.value) return;
+    document.getElementById('send-to').value = opt.dataset.email || '';
+    updateMailto();
+}
+
+function autoFill() {
+    const sel = document.getElementById('fill-curator');
+    const opt = sel.options[sel.selectedIndex];
+    const curatorName = opt.dataset.name || '';
+    const playlistName = opt.dataset.playlist || '';
+
+    const trackSel = document.getElementById('fill-track');
+    const trackOpt = trackSel.options[trackSel.selectedIndex];
+    const trackTitle = trackOpt.text || '';
+
+    const subject = document.getElementById('email-subject').value;
+    const body = document.getElementById('email-body').value;
+
+    // Replace variables
+    let filledSubject = subject
+        .replace(/{curator_name}/g, curatorName)
+        .replace(/{playlist_name}/g, playlistName)
+        .replace(/{artist_name}/g, artist.name)
+        .replace(/{track_title}/g, trackTitle)
+        .replace(/{location}/g, artist.location)
+        .replace(/{track_link}/g, artist.spotify)
+        .replace(/{website}/g, artist.website)
+        .replace(/{social_link}/g, artist.social);
+
+    let filledBody = body
+        .replace(/{curator_name}/g, curatorName)
+        .replace(/{playlist_name}/g, playlistName)
+        .replace(/{artist_name}/g, artist.name)
+        .replace(/{track_title}/g, trackTitle)
+        .replace(/{location}/g, artist.location)
+        .replace(/{track_link}/g, artist.spotify)
+        .replace(/{website}/g, artist.website)
+        .replace(/{social_link}/g, artist.social)
+        .replace(/{theme}/g, 'mortality and resilience')
+        .replace(/{listener_vibe}/g, 'raw, unfiltered energy')
+        .replace(/{bass_description}/g, 'earth-shaking 808s')
+        .replace(/{drum_description}/g, 'hard-hitting drums')
+        .replace(/{energy_level}/g, 'serious')
+        .replace(/{vibe_description}/g, 'Dark, cinematic hip hop with hard bars and atmospheric production')
+        .replace(/{production_description}/g, 'a moody, sample-driven instrumental')
+        .replace(/{mood}/g, 'cinematic')
+        .replace(/{album_reference}/g, 'the Memento Mori trilogy')
+        .replace(/{comparable_artists}/g, 'underground hip hop');
+
+    document.getElementById('email-subject').value = filledSubject;
+    document.getElementById('email-body').value = filledBody;
+    updateMailto();
+}
+
+function updateMailto() {
+    const to = document.getElementById('send-to').value;
+    const subject = encodeURIComponent(document.getElementById('email-subject').value);
+    const body = encodeURIComponent(document.getElementById('email-body').value);
+    const link = document.getElementById('mailto-link');
+    if (to) {
+        link.href = `mailto:${to}?subject=${subject}&body=${body}`;
+        link.style.opacity = '1';
+    } else {
+        link.href = '#';
+    }
+}
+
+function copyEmail() {
+    const body = document.getElementById('email-body').value;
+    const subject = document.getElementById('email-subject').value;
+    navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`).then(() => {
+        alert('Email copied to clipboard!');
+    });
+}
+
+function fillFromTemplate() {
+    const sel = document.getElementById('fill-template');
+    if (sel.value) applyTemplate();
+    else alert('Select a template first from the dropdown.');
+}
+
+// Listen for input changes to update mailto
+document.getElementById('email-subject').addEventListener('input', updateMailto);
+document.getElementById('email-body').addEventListener('input', updateMailto);
+document.getElementById('send-to').addEventListener('input', updateMailto);
+</script>
+{% endblock %}

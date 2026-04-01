@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}Publora - Marketing Manager{% endblock %}
+{% block page_title %}Publora Social Posting{% endblock %}
+
+{% block topbar_actions %}
+{% if configured %}
+<div style="display:flex;gap:10px;">
+    <a href="/post-scheduler" class="btn btn-secondary">← Back to Scheduler</a>
+    <button class="btn btn-primary" onclick="openModal('modal-quick-post')">+ Quick Post</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if not configured %}
+<!-- Setup Banner -->
+<div class="card" style="border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.05);">
+    <div style="display:flex;align-items:flex-start;gap:20px;">
+        <div style="font-size:36px;">🔗</div>
+        <div style="flex:1;">
+            <h3 style="margin-bottom:8px;">Connect Publora API</h3>
+            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px;">
+                Publora lets you post to TikTok, Instagram, YouTube Shorts, Facebook Reels, LinkedIn, X, Threads, Bluesky, and Telegram — all from one API.
+                Get your API key at <a href="https://publora.com" target="_blank" style="color:var(--accent);">publora.com</a>.
+            </p>
+            <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:14px 18px;font-size:12px;color:var(--text-dim);font-family:monospace;margin-bottom:16px;">
+                <div style="margin-bottom:6px;color:var(--text);">Set your API key as an environment variable:</div>
+                <div>export PUBLORA_API_KEY=sk_your_api_key_here</div>
+                <div style="margin-top:4px;">Then restart the app, or enter it below for this session.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if configured %}
+<!-- Connection Status + Stats -->
+<div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label">Connected Accounts</div>
+        <div class="stat-value">{{ connections | length if connections else 0 }}</div>
+        <div class="stat-sub">via Publora</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Recent Posts</div>
+        <div class="stat-value">{{ recent_posts | length if recent_posts else 0 }}</div>
+        <div class="stat-sub">last 20</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">API Status</div>
+        <div class="stat-value" style="font-size:20px;">✓</div>
+        <div class="stat-sub text-success">Connected</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Supported</div>
+        <div class="stat-value" style="font-size:16px;">9</div>
+        <div class="stat-sub">Platforms</div>
+    </div>
+</div>
+
+{% if connections %}
+<!-- Connected Accounts -->
+<div class="card">
+    <div class="card-header">
+        <h3>Connected Social Accounts</h3>
+        <a href="/post-scheduler/publora/connections" class="btn btn-sm btn-secondary">Refresh</a>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Platform</th>
+                    <th>Account</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conn in connections %}
+                <tr>
+                    <td>
+                        <span class="platform-badge">{{ conn.platform }}</span>
+                    </td>
+                    <td style="max-width:200px;">
+                        <span class="truncate" style="display:block;font-size:13px;">{{ conn.get('username', conn.get('account_id', '—')) }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-active">Connected</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="testAccount('{{ conn.platform }}')">Test</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <div class="icon">🔗</div>
+        <h3>No Connected Accounts</h3>
+        <p>Connect your social accounts in the Publora dashboard at <a href="https://publora.com" target="_blank" style="color:var(--accent);">publora.com</a>, then they will appear here.</p>
+        <a href="https://publora.com" target="_blank" class="btn btn-primary">Open Publora Dashboard</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Post Form -->
+<div class="card">
+    <div class="card-header">
+        <h3>Quick Post via Publora</h3>
+        <span style="font-size:11px;color:var(--text-dim);">Post to one or more platforms instantly</span>
+    </div>
+
+    <div class="form-group">
+        <label>Content</label>
+        <textarea id="publora_content" class="form-control" rows="4" placeholder="New music out now! 🎵 🎤 Link in bio... #newrelease #music"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Platforms</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+            {% set platform_list = ['tiktok','instagram','youtube','facebook','linkedin','x','threads','bluesky','telegram'] %}
+            {% for p in platform_list %}
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;font-size:12px;font-weight:600;transition:all 0.2s;">
+                <input type="checkbox" name="platform" value="{{ p }}" style="accent-color:var(--accent);">
+                {{ p | capitalize }}
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Optional Media URL</label>
+        <input type="text" id="publora_media_url" class="form-control" placeholder="https://example.com/video.mp4 or image URL">
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="publoraPost()">🚀 Post Now</button>
+        <button class="btn btn-secondary" onclick="openModal('modal-schedule')">⏰ Schedule</button>
+        <button class="btn btn-success" onclick="publoraPostAll()">📢 Post to All Connected</button>
+    </div>
+    <div id="post_result" style="margin-top:16px;"></div>
+</div>
+
+{% if recent_posts %}
+<!-- Recent Posts -->
+<div class="card">
+    <div class="card-header">
+        <h3>Recent Posts</h3>
+        <button class="btn btn-sm btn-secondary" onclick="loadAnalytics()">📊 Analytics</button>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Content</th>
+                    <th>Platforms</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in recent_posts %}
+                <tr>
+                    <td style="max-width:300px;">
+                        <span class="truncate" style="display:block;font-size:12px;">{{ post.get('content', '—') | truncate(60, true) }}</span>
+                    </td>
+                    <td>
+                        {% for plat in post.get('platforms', []) %}
+                        <span class="platform-badge" style="margin-right:4px;">{{ plat }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ 'active' if post.get('status') == 'published' else 'pending' }}">{{ post.get('status', '—') }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size:11px;color:var(--text-dim);">{{ post.get('created_at', post.get('scheduledTime', '—')) }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- API Key Info -->
+<div class="card" style="border-color:rgba(124,106,239,0.2);">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">🔑</div>
+        <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">Publora API Connected</div>
+            <div style="font-size:11px;color:var(--text-dim);">
+                Key: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;">{{ PUBLORA_API_KEY[:12] }}...{{ PUBLORA_API_KEY[-4:] if PUBLORA_API_KEY | length > 16 else '' }}</code>
+                &nbsp;|&nbsp;
+                <a href="https://publora.com" target="_blank" style="color:var(--accent);font-size:11px;">publora.com →</a>
+            </div>
+        </div>
+        <form action="/post-scheduler/publora/connect" method="POST" style="display:flex;gap:8px;">
+            <input type="password" name="api_key" class="form-control" placeholder="New API key" style="width:200px;">
+            <button type="submit" class="btn btn-secondary btn-sm">Update Key</button>
+        </form>
+    </div>
+</div>
+
+{% else %}
+<!-- Connect Form when not configured -->
+<div class="card">
+    <div class="card-header">
+        <h3>Connect Publora</h3>
+    </div>
+    <form action="/post-scheduler/publora/connect" method="POST">
+        <div class="form-group">
+            <label>API Key</label>
+            <input type="password" name="api_key" class="form-control" placeholder="sk_live_..." required style="max-width:400px;">
+            <small style="color:var(--text-dim);font-size:11px;margin-top:4px;display:block;">
+                Get your API key at <a href="https://publora.com" target="_blank" style="color:var(--accent);">publora.com</a>
+            </small>
+        </div>
+        <button type="submit" class="btn btn-primary">Connect Publora</button>
+    </form>
+</div>
+
+<!-- Platform Icons -->
+<div class="card">
+    <div class="card-header">
+        <h3>Supported Platforms</h3>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+        {% for plat in ['TikTok','Instagram','YouTube Shorts','Facebook Reels','LinkedIn','X (Twitter)','Threads','Bluesky','Telegram'] %}
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;">
+            <div style="width:32px;height:32px;background:var(--gradient);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">✓</div>
+            <span style="font-size:12px;font-weight:600;">{{ plat }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block modals %}
+<!-- Schedule Modal -->
+<div class="modal-overlay" id="modal-schedule">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Schedule Post via Publora</h3>
+            <button class="modal-close" onclick="closeModal('modal-schedule')">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Content</label>
+            <textarea id="sched_content" class="form-control" rows="3" placeholder="Your post content..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Platforms</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                {% set platform_list = ['tiktok','instagram','youtube','facebook','linkedin','x','threads','bluesky','telegram'] %}
+                {% for p in platform_list %}
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 12px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;font-size:11px;font-weight:600;">
+                    <input type="checkbox" name="sched_platform" value="{{ p }}" style="accent-color:var(--accent);">
+                    {{ p | capitalize }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="sched_date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Time</label>
+                <input type="time" id="sched_time" class="form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Optional Media URL</label>
+            <input type="text" id="sched_media_url" class="form-control" placeholder="https://...">
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+            <button class="btn btn-secondary" onclick="closeModal('modal-schedule')">Cancel</button>
+            <button class="btn btn-primary" onclick="publoraSchedule()">Schedule Post</button>
+        </div>
+        <div id="schedule_result" style="margin-top:14px;"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Sync content from main form to schedule modal
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+    if (id === 'modal-schedule') {
+        const content = document.getElementById('publora_content').value;
+        document.getElementById('sched_content').value = content;
+        // Set default date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('sched_date').valueAsDate = tomorrow;
+    }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+async function publoraPost() {
+    const content = document.getElementById('publora_content').value.trim();
+    const platforms = [...document.querySelectorAll('input[name="platform"]:checked')].map(c => c.value);
+    const mediaUrl = document.getElementById('publora_media_url').value.trim();
+
+    if (!content && !mediaUrl) { alert('Enter content or a media URL.'); return; }
+    if (platforms.length === 0) { alert('Select at least one platform.'); return; }
+
+    const resultDiv = document.getElementById('post_result');
+    resultDiv.innerHTML = '<div style="color:var(--info);font-size:12px;">Posting...</div>';
+
+    try {
+        const resp = await fetch('/post-scheduler/publora/post', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                content,
+                platforms,
+                media_urls: mediaUrl ? [mediaUrl] : []
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            resultDiv.innerHTML = '<div style="color:var(--success);font-size:13px;">✓ Posted successfully!</div>';
+            document.getElementById('publora_content').value = '';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `<div style="color:var(--danger);font-size:12px;">Error: ${JSON.stringify(data.error)}</div>`;
+        }
+    } catch(e) {
+        resultDiv.innerHTML = `<div style="color:var(--danger);font-size:12px;">Request failed: ${e}</div>`;
+    }
+}
+
+async function publoraPostAll() {
+    const content = document.getElementById('publora_content').value.trim();
+    const mediaUrl = document.getElementById('publora_media_url').value.trim();
+
+    if (!content && !mediaUrl) { alert('Enter content or a media URL.'); return; }
+    if (!confirm('Post this content to ALL connected platforms?')) return;
+
+    const resultDiv = document.getElementById('post_result');
+    resultDiv.innerHTML = '<div style="color:var(--info);font-size:12px;">Posting to all platforms...</div>';
+
+    try {
+        const resp = await fetch('/post-scheduler/publora/post-all', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                content,
+                media_urls: mediaUrl ? [mediaUrl] : []
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            resultDiv.innerHTML = `<div style="color:var(--success);font-size:13px;">✓ Posted to ${data.platforms_posted.length} platforms!</div>`;
+            document.getElementById('publora_content').value = '';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `<div style="color:var(--danger);font-size:12px;">Error: ${JSON.stringify(data.error)}</div>`;
+        }
+    } catch(e) {
+        resultDiv.innerHTML = `<div style="color:var(--danger);font-size:12px;">Request failed: ${e}</div>`;
+    }
+}
+
+async function publoraSchedule() {
+    const content = document.getElementById('sched_content').value.trim();
+    const platforms = [...document.querySelectorAll('input[name="sched_platform"]:checked')].map(c => c.value);
+    const date = document.getElementById('sched_date').value;
+    const time = document.getElementById('sched_time').value;
+    const mediaUrl = document.getElementById('sched_media_url').value.trim();
+
+    if (!content && !mediaUrl) { alert('Enter content or a media URL.'); return; }
+    if (platforms.length === 0) { alert('Select at least one platform.'); return; }
+    if (!date || !time) { alert('Enter a date and time.'); return; }
+
+    const scheduledTime = `${date}T${time}:00Z`;
+
+    const resultDiv = document.getElementById('schedule_result');
+    resultDiv.innerHTML = '<div style="color:var(--info);font-size:12px;">Scheduling...</div>';
+
+    try {
+        const resp = await fetch('/post-scheduler/publora/schedule', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                content,
+                platforms,
+                scheduled_time: scheduledTime,
+                media_urls: mediaUrl ? [mediaUrl] : []
+            })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            resultDiv.innerHTML = '<div style="color:var(--success);font-size:13px;">✓ Scheduled!</div>';
+            closeModal('modal-schedule');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            resultDiv.innerHTML = `<div style="color:var(--danger);font-size:12px;">Error: ${JSON.stringify(data.error)}</div>`;
+        }
+    } catch(e) {
+        resultDiv.innerHTML = `<div style="color:var(--danger);font-size:12px;">Request failed: ${e}</div>`;
+    }
+}
+
+async function loadAnalytics() {
+    try {
+        const resp = await fetch('/post-scheduler/publora/analytics');
+        const data = await resp.json();
+        alert(`Analytics:\nTotal posts: ${data.total_posts}\nPlatform breakdown: ${JSON.stringify(data.by_platform, null, 2)}`);
+    } catch(e) {
+        alert('Failed to load analytics: ' + e);
+    }
+}
+
+async function testAccount(platform) {
+    alert(`Testing ${platform} connection via Publora...`);
+}
+</script>
+{% endblock %}

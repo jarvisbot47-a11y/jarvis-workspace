@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Scheduler - Marketing Manager</title>
+    <style>
+        :root { --bg-dark: #0d0d0d; --bg-card: #1a1a1a; --bg-card-hover: #222; --accent: #c8a45a; --accent-dim: #8a6d3b; --accent-glow: rgba(200,164,90,0.15); --text: #e0e0e0; --text-dim: #888; --border: #2a2a2a; --success: #4caf50; --warning: #ff9800; --danger: #f44336; --info: #2196f3; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; background: #111; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-brand h1 { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .sidebar-brand span { font-size: 11px; color: var(--text-dim); display: block; margin-top: 2px; }
+        .sidebar nav { flex: 1; padding: 16px 0; overflow-y: auto; max-height: calc(100vh - 200px); }
+        .sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar nav a:hover { color: var(--text); background: var(--bg-card); }
+        .sidebar nav a.active { color: var(--accent); background: var(--accent-glow); border-left-color: var(--accent); }
+        .sidebar nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+        .main { margin-left: 240px; min-height: 100vh; }
+        .topbar { background: rgba(13,13,13,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h2 { font-size: 20px; font-weight: 600; }
+        .page-content { padding: 32px; max-width: 1400px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 640px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-pending { background: rgba(255,152,0,0.15); color: var(--warning); }
+        .badge-active { background: rgba(76,175,80,0.15); color: var(--success); }
+        .badge-paused { background: rgba(128,128,128,0.15); color: var(--text-dim); }
+        .badge-completed { background: rgba(200,164,90,0.15); color: var(--accent); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand"><h1>⚡ Marketing Manager</h1><span>Mystik Singh</span></div>
+        <nav>
+            <a href="{{ url_for('index') }}"><span class="icon">📊</span> Dashboard</a>
+            <a href="{{ url_for('proxies') }}"><span class="icon">🌐</span> Proxy Manager</a>
+            <a href="{{ url_for('streaming_accounts') }}"><span class="icon">🔒</span> Streaming Accounts</a>
+            <a href="{{ url_for('streaming_automation') }}"><span class="icon">▶️</span> Streaming Automation</a>
+            <a href="{{ url_for('account_creator') }}"><span class="icon">🔐</span> Account Creator</a>
+            <a href="{{ url_for('emulators') }}"><span class="icon">📱</span> Emulators</a>
+            <a href="{{ url_for('scheduler') }}" class="active"><span class="icon">⏰</span> Scheduler</a>
+            <a href="{{ url_for('statistics') }}"><span class="icon">📈</span> Statistics</a>
+            <a href="{{ url_for('tiktok') }}"><span class="icon">🎵</span> TikTok Bot</a>
+            <a href="{{ url_for('ai_playlists') }}"><span class="icon">🤖</span> AI Playlists</a>
+            <a href="{{ url_for('anti_detect') }}"><span class="icon">🛡️</span> Anti-Detect</a>
+            <a href="{{ url_for('email_accounts') }}"><span class="icon">📧</span> Email Accounts</a>
+            <a href="{{ url_for('export') }}"><span class="icon">💾</span> Backup Data</a>
+        </nav>
+        <div class="sidebar-footer">Memento Mori Series<br>Vol. 1 · 2 · 3</div>
+    </aside>
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>⏰ Task Scheduler</h2><button class="btn btn-primary" onclick="openModal('addTaskModal')">+ New Task</button></div>
+        <div class="page-content">
+            <div class="card">
+                <div class="card-header"><h3>Scheduled Tasks</h3></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Task Name</th><th>Type</th><th>Platform</th><th>Target</th><th>Schedule</th><th>Next Run</th><th>Status</th><th>Run Count</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        {% for t in tasks %}
+                        <tr>
+                            <td><strong>{{ t.task_name }}</strong></td>
+                            <td><span class="badge badge-active">{{ t.task_type }}</span></td>
+                            <td>{{ t.platform or '-' }}</td>
+                            <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ t.target_url or t.target_id or '-' }}</td>
+                            <td>{{ t.schedule_type }} {% if t.interval_seconds %}({{ t.interval_seconds }}s){% endif %}</td>
+                            <td>{% if t.next_run_at %}{{ t.next_run_at[:16] }}{% else %}—{% endif %}</td>
+                            <td><span class="badge badge-{{ t.status }}">{{ t.status }}</span></td>
+                            <td>{{ t.run_count }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" onclick="editTask({{ t }})">✏️</button>
+                                <form action="/scheduler/{{ t.id }}/run" method="POST" style="display:inline;"><button class="btn btn-sm btn-secondary" type="submit">▶️</button></form>
+                                <form action="/scheduler/{{ t.id }}/toggle" method="POST" style="display:inline;"><button class="btn btn-sm btn-secondary" type="submit">{{ '⏸️' if t.status=='active' else '▶️' }}</button></form>
+                                <form action="/scheduler/{{ t.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this task?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-dim)">No scheduled tasks. Create your first task above.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="addTaskModal">
+        <div class="modal">
+            <div class="modal-header"><h3>⏰ New Scheduled Task</h3><button class="modal-close" onclick="closeModal('addTaskModal')">&times;</button></div>
+            <form action="/scheduler/add" method="POST">
+                <div class="form-row">
+                    <div class="form-group"><label>Task Name</label><input class="form-control" name="task_name" required placeholder="Daily Play Boost"></div>
+                    <div class="form-group"><label>Task Type</label><select class="form-control" name="task_type">{% for t in task_types %}<option value="{{ t }}">{{ t|capitalize }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Platform</label><select class="form-control" name="platform">{% for p in platforms %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Target URL</label><input class="form-control" name="target_url" placeholder="https://..."></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Schedule Type</label><select class="form-control" name="schedule_type" onchange="toggleInterval(this.value)"><option value="once">Once</option><option value="interval">Interval</option><option value="cron">Cron Expression</option></select></div>
+                    <div class="form-group"><label>Priority (1-10)</label><input class="form-control" name="priority" type="number" value="5" min="1" max="10"></div>
+                </div>
+                <div class="form-row-3" id="intervalFields" style="display:none;">
+                    <div class="form-group"><label>Interval (sec)</label><input class="form-control" name="interval_seconds" placeholder="3600"></div>
+                    <div class="form-group"><label>Max Repeats</label><input class="form-control" name="max_repeats" type="number" value="0" placeholder="0 = unlimited"></div>
+                    <div class="form-group"><label>Scheduled At</label><input class="form-control" name="scheduled_at" type="datetime-local"></div>
+                </div>
+                <div class="form-row-3">
+                    <div class="form-group"><label>Play Duration (sec)</label><input class="form-control" name="play_duration_secs" type="number" value="30"></div>
+                    <div class="form-group"><label>Loop Count</label><input class="form-control" name="loop_count" type="number" value="1"></div>
+                    <div class="form-group"><label>Interval Between Plays</label><input class="form-control" name="interval_between_plays_secs" type="number" value="10"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Bind Account</label><select class="form-control" name="account_id"><option value="">— None —</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.platform }}: {{ a.email or a.username }}</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Bind Proxy</label><select class="form-control" name="proxy_id"><option value="">— None —</option>{% for p in proxies %}<option value="{{ p.id }}">{{ p.proxy_string[:40] }}</option>{% endfor %}</select></div>
+                </div>
+                <div style="display:flex; gap:12px; margin-top:8px;"><button type="submit" class="btn btn-primary" style="flex:1">Schedule Task</button><button type="button" class="btn btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="editTaskModal">
+        <div class="modal">
+            <div class="modal-header"><h3>✏️ Edit Task</h3><button class="modal-close" onclick="closeModal('editTaskModal')">&times;</button></div>
+            <form id="editTaskForm" method="POST">
+                <div class="form-row">
+                    <div class="form-group"><label>Task Name</label><input class="form-control" name="task_name" id="edit_task_name"></div>
+                    <div class="form-group"><label>Status</label><select class="form-control" name="status" id="edit_status"><option value="pending">Pending</option><option value="active">Active</option><option value="paused">Paused</option></select></div>
+                </div>
+                <div class="form-row-3">
+                    <div class="form-group"><label>Play Duration</label><input class="form-control" name="play_duration_secs" type="number" id="edit_play_duration_secs"></div>
+                    <div class="form-group"><label>Loop Count</label><input class="form-control" name="loop_count" type="number" id="edit_loop_count"></div>
+                    <div class="form-group"><label>Priority</label><input class="form-control" name="priority" type="number" id="edit_priority"></div>
+                </div>
+                <div style="display:flex; gap:12px; margin-top:8px;"><button type="submit" class="btn btn-primary" style="flex:1">Save Changes</button><button type="button" class="btn btn-secondary" onclick="closeModal('editTaskModal')">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function toggleInterval(val) { document.getElementById('intervalFields').style.display = val === 'interval' || val === 'cron' ? 'grid' : 'none'; }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editTask(t) {
+            document.getElementById('edit_task_name').value = t.task_name || '';
+            document.getElementById('edit_status').value = t.status || 'pending';
+            document.getElementById('edit_play_duration_secs').value = t.play_duration_secs || 30;
+            document.getElementById('edit_loop_count').value = t.loop_count || 1;
+            document.getElementById('edit_priority').value = t.priority || 5;
+            document.getElementById('editTaskForm').action = '/scheduler/' + t.id + '/edit';
+            openModal('editTaskModal');
+        }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>
+</body>
+</html>

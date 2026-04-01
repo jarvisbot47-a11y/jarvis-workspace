@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}Live Monitor - Marketing Manager{% endblock %}
+{% block topbar %}
+<div class="topbar">
+    <h2>{% block page_title %}📱 Live Monitor{% endblock %}</h2>
+    <div class="live-indicator">
+        <div class="live-dot"></div>
+        <span>LIVE</span>
+    </div>
+</div>
+{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .live-indicator { display: flex; align-items: center; gap: 8px; color: var(--success); font-size: 14px; font-weight: 600; }
+        .live-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        /* Stats Bar */
+        .stats-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-tile { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-tile .label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-tile .value { font-size: 28px; font-weight: 700; color: var(--accent); }
+        .stat-tile .sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+        
+        /* Schedule Timeline */
+        .schedule-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 32px; }
+        .schedule-bar h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+        .timeline { display: flex; gap: 4px; }
+        .timeline-block { flex: 1; padding: 12px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 600; }
+        .timeline-block.play { background: rgba(76,175,80,0.2); color: var(--success); }
+        .timeline-block.break { background: rgba(255,152,0,0.2); color: var(--warning); }
+        .timeline-block.active { border: 2px solid var(--accent); }
+        .timeline-label { font-size: 10px; opacity: 0.8; }
+        
+        /* Emulator Grid */
+        .emulator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .emulator-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .emulator-header { background: #111; padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .emulator-header h4 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .emulator-status { width: 10px; height: 10px; border-radius: 50%; background: var(--success); }
+        .emulator-status.playing { background: var(--success); animation: pulse 1s infinite; }
+        .emulator-status.stopped { background: var(--danger); }
+        .emulator-status.break { background: var(--warning); }
+        .emulator-screen { background: #000; height: 200px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .emulator-screen img { max-width: 100%; max-height: 100%; }
+        .phone-frame { width: 180px; height: 320px; background: #1a1a1a; border: 3px solid #333; border-radius: 24px; padding: 8px; position: relative; }
+        .phone-screen { width: 100%; height: 100%; background: #fff; border-radius: 16px; overflow: hidden; position: relative; }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 60px; height: 16px; background: #1a1a1a; border-radius: 0 0 12px 12px; z-index: 2; }
+        .spotify-app { width: 100%; height: 100%; background: linear-gradient(180deg, #191414 0%, #121212 100%); display: flex; flex-direction: column; }
+        .spotify-header { padding: 24px 12px 8px; text-align: center; }
+        .spotify-logo { color: #1DB954; font-size: 20px; font-weight: bold; }
+        .spotify-album { width: 100px; height: 100px; margin: 12px auto; background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .spotify-album span { font-size: 32px; }
+        .spotify-track { padding: 8px 12px; text-align: center; }
+        .spotify-track .title { color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .spotify-track .artist { color: #b3b3b3; font-size: 10px; margin-top: 2px; }
+        .spotify-progress { height: 3px; background: #404040; margin: 8px 12px; border-radius: 2px; }
+        .spotify-progress-bar { width: 35%; height: 100%; background: #1DB954; border-radius: 2px; }
+        .spotify-controls { display: flex; justify-content: center; gap: 16px; padding: 8px; margin-top: 4px; }
+        .spotify-controls span { color: #b3b3b3; font-size: 14px; }
+        .spotify-controls .play-btn { color: #fff; font-size: 20px; }
+        .emulator-info { padding: 16px; }
+        .emulator-info .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .emulator-info .row:last-child { border-bottom: none; }
+        .emulator-info .label { color: var(--text-dim); }
+        .emulator-info .value { color: var(--text); font-weight: 600; }
+        
+        /* Album Status */
+        .album-row { display: flex; gap: 12px; padding: 8px 0; }
+        .album-mini { flex: 1; background: var(--bg-card-hover); border-radius: 8px; padding: 12px; text-align: center; }
+        .album-mini .cover { width: 48px; height: 48px; background: linear-gradient(135deg, #333, #1a1a1a); border-radius: 4px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+        .album-mini .title { font-size: 10px; font-weight: 600; }
+        .album-mini .status { font-size: 9px; color: var(--success); margin-top: 4px; }
+        .album-mini .status.playing::before { content: '▶ '; }
+        .album-mini .status.break { color: var(--warning); }
+        
+        /* Logs */
+        .log-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; max-height: 300px; overflow-y: auto; }
+        .log-header { padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600; position: sticky; top: 0; background: var(--bg-card); }
+        .log-entry { padding: 8px 16px; font-family: 'Monaco', 'Menlo', monospace; font-size: 11px; border-bottom: 1px solid var(--border); }
+        .log-entry:last-child { border-bottom: none; }
+        .log-time { color: var(--text-dim); margin-right: 12px; }
+        .log-account { color: var(--accent); }
+        .log-album { color: var(--info); }
+        .log-status { color: var(--success); }
+        
+        /* Refresh */
+        .refresh-info { text-align: right; font-size: 11px; color: var(--text-dim); margin-bottom: 16px; }
+    
+    </style>
+{% endblock %}
+{% block content %}
+<div class="topbar">
+            <h2>📱 Live Monitor</h2>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>LIVE</span>
+            </div>
+        </div>
+        
+        <div class="page-content">
+            <div class="refresh-info">Auto-refreshes every 5 seconds</div>
+            
+            <!-- Stats Overview -->
+            <div class="stats-bar">
+                <div class="stat-tile">
+                    <div class="label">Active Streams</div>
+                    <div class="value" id="active-streams">{{ active_count }}</div>
+                    <div class="sub">/ 60 total</div>
+                </div>
+                <div class="stat-tile">
+                    <div class="label">Accounts</div>
+                    <div class="value">{{ account_count }}</div>
+                    <div class="sub">Spotify</div>
+                </div>
+                <div class="stat-tile">
+                    <div class="label">Albums</div>
+                    <div class="value">3</div>
+                    <div class="sub">Memento Mori</div>
+                </div>
+                <div class="stat-tile">
+                    <div class="label">Current Phase</div>
+                    <div class="value" id="phase">{{ current_phase }}</div>
+                    <div class="sub" id="phase-time">--:--:-- remaining</div>
+                </div>
+                <div class="stat-tile">
+                    <div class="label">Cycle</div>
+                    <div class="value">{{ cycle }}</div>
+                    <div class="sub">#</div>
+                </div>
+                <div class="stat-tile">
+                    <div class="label">Uptime</div>
+                    <div class="value" id="uptime">{{ uptime }}</div>
+                    <div class="sub">hours</div>
+                </div>
+            </div>
+            
+            <!-- Schedule Timeline -->
+            <div class="schedule-bar">
+                <h3>⏰ Schedule Timeline</h3>
+                <div class="timeline">
+                    <div class="timeline-block play {% if current_phase == '15h play' %}active{% endif %}">
+                        <div class="timeline-label">15h Play</div>
+                        <div>▶</div>
+                    </div>
+                    <div class="timeline-block break {% if current_phase == '1h break' %}active{% endif %}">
+                        <div class="timeline-label">1h Break</div>
+                        <div>⏸</div>
+                    </div>
+                    <div class="timeline-block play {% if current_phase == '4h play' %}active{% endif %}">
+                        <div class="timeline-label">4h Play</div>
+                        <div>▶</div>
+                    </div>
+                    <div class="timeline-block break {% if current_phase == '1h break' %}active{% endif %}">
+                        <div class="timeline-label">1h Break</div>
+                        <div>⏸</div>
+                    </div>
+                    <div class="timeline-block play {% if current_phase == '3h play' %}active{% endif %}">
+                        <div class="timeline-label">3h Play</div>
+                        <div>▶</div>
+                    </div>
+                    <div class="timeline-block break {% if current_phase == '1h break' %}active{% endif %}">
+                        <div class="timeline-label">1h Break</div>
+                        <div>⏸</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Emulator Grid -->
+            <h3 style="margin-bottom: 20px;">📱 Active Emulators (Phone Simulations)</h3>
+            <div class="emulator-grid" id="emulator-grid">
+                {% for account in accounts %}
+                <div class="emulator-card">
+                    <div class="emulator-header">
+                        <h4>
+                            <div class="emulator-status playing"></div>
+                            {{ account.display_name }}
+                        </h4>
+                        <span style="font-size: 11px; color: var(--text-dim);">{{ account.email }}</span>
+                    </div>
+                    <div class="emulator-screen">
+                        <div class="phone-frame">
+                            <div class="phone-screen">
+                                <div class="phone-notch"></div>
+                                <div class="spotify-app">
+                                    <div class="spotify-header">
+                                        <div class="spotify-logo">● Spotify</div>
+                                    </div>
+                                    <div style="padding: 0 12px;">
+                                        <div class="spotify-album">
+                                            <span>🎵</span>
+                                        </div>
+                                    </div>
+                                    <div class="spotify-track">
+                                        <div class="title">{{ account.current_track|default('Memento Mori') }}</div>
+                                        <div class="artist">Mystik Singh</div>
+                                    </div>
+                                    <div class="spotify-progress">
+                                        <div class="spotify-progress-bar"></div>
+                                    </div>
+                                    <div class="spotify-controls">
+                                        <span>⏮</span>
+                                        <span class="play-btn">▶</span>
+                                        <span>⏭</span>
+                                    </div>
+                                    <div class="album-row" style="padding: 8px;">
+                                        <div class="album-mini">
+                                            <div class="cover">1</div>
+                                            <div class="title">Vol. 1</div>
+                                            <div class="status playing">Playing</div>
+                                        </div>
+                                        <div class="album-mini">
+                                            <div class="cover">2</div>
+                                            <div class="title">Vol. 2</div>
+                                            <div class="status">Queued</div>
+                                        </div>
+                                        <div class="album-mini">
+                                            <div class="cover">3</div>
+                                            <div class="title">Vol. 3</div>
+                                            <div class="status">Queued</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="emulator-info">
+                        <div class="row">
+                            <span class="label">Account</span>
+                            <span class="value">{{ account.username }}</span>
+                        </div>
+                        <div class="row">
+                            <span class="label">Platform</span>
+                            <span class="value">Spotify</span>
+                        </div>
+                        <div class="row">
+                            <span class="label">Status</span>
+                            <span class="value" style="color: var(--success);">▶ Playing</span>
+                        </div>
+                        <div class="row">
+                            <span class="label">Proxy</span>
+                            <span class="value">{{ account.proxy|default('Rotating') }}</span>
+                        </div>
+                        <div class="row">
+                            <span class="label">Fingerprint</span>
+                            <span class="value">Anti-Detect #{{ (loop.index % 5) + 1 }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Live Log -->
+            <div class="log-container" style="margin-top: 32px;">
+                <div class="log-header">📋 Live Activity Log</div>
+                <div id="log-entries">
+                    {% for log in logs %}
+                    <div class="log-entry">
+                        <span class="log-time">{{ log.time }}</span>
+                        <span class="log-account">{{ log.account }}</span>
+                        <span>→</span>
+                        <span class="log-album">{{ log.album }}</span>
+                        <span class="log-status">{{ log.status }}</span>
+                    </div>
+                    {% endfor %}
+                    <div class="log-entry">
+                        <span class="log-time">15:04:00</span>
+                        <span class="log-account">Listener 01-20</span>
+                        <span>→</span>
+                        <span class="log-album">Memento Mori Vol. 1, 2, 3</span>
+                        <span class="log-status">▶ Streaming started</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+// Auto-refresh every 5 seconds
+        setTimeout(function() { location.reload(); }, 5000);
+    </script>{% endblock %}

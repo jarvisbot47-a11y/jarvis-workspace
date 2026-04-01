@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Social Profiles - Marketing Manager{% endblock %}
+{% block page_title %}Social Profiles{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;">
+    <button class="btn btn-primary" onclick="openModal('modal-add-profile')">+ Add Profile</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label">Instagram</div>
+        <div class="stat-value">{{ stats.instagram or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">TikTok</div>
+        <div class="stat-value">{{ stats.tiktok or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">YouTube</div>
+        <div class="stat-value">{{ stats.youtube or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Facebook</div>
+        <div class="stat-value">{{ stats.facebook or 0 }}</div>
+    </div>
+</div>
+
+<div class="filters-bar">
+    <select onchange="filterByStatus(this.value)" style="min-width:150px;">
+        <option value="">All Status</option>
+        <option value="logged_in">Logged In</option>
+        <option value="logged_out">Logged Out</option>
+        <option value="error">Error</option>
+    </select>
+    <select onchange="filterByPlatform(this.value)" style="min-width:150px;">
+        <option value="">All Platforms</option>
+        <option value="instagram">Instagram</option>
+        <option value="tiktok">TikTok</option>
+        <option value="youtube">YouTube</option>
+        <option value="facebook">Facebook</option>
+        <option value="twitter">Twitter</option>
+    </select>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Browser Profiles</h3>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-sm btn-secondary" onclick="checkAllStatus()">Check All Status</button>
+            <button class="btn btn-sm btn-secondary" onclick="closeAllBrowsers()">Close All Browsers</button>
+        </div>
+    </div>
+    {% if profiles %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Platform</th>
+                    <th>Profile Name</th>
+                    <th>Username</th>
+                    <th>Status</th>
+                    <th>Last Used</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in profiles %}
+                <tr>
+                    <td>
+                        <span class="platform-badge">{{ p.platform }}</span>
+                    </td>
+                    <td>{{ p.profile_name }}</td>
+                    <td>{{ p.username or '—' }}</td>
+                    <td>
+                        {% if p.status == 'logged_in' %}
+                        <span class="badge badge-active">✓ Logged In</span>
+                        {% elif p.status == 'logged_out' %}
+                        <span class="badge badge-noresponse">Logged Out</span>
+                        {% elif p.status == 'error' %}
+                        <span class="badge badge-rejected">Error</span>
+                        {% else %}
+                        <span class="badge badge-{{ p.status }}">{{ p.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.last_used or 'Never' }}</td>
+                    <td>
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <button class="btn btn-sm btn-secondary" onclick="openBrowser('{{ p.platform }}', '{{ p.profile_name }}')">Open</button>
+                            <button class="btn btn-sm btn-secondary" onclick="checkLogin('{{ p.platform }}', '{{ p.profile_name }}')">Check</button>
+                            <form action="/social-profile/{{ p.platform }}/{{ p.profile_name }}/delete" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Del</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-dim);padding:40px;text-align:center;">
+        No browser profiles yet. Add one and log in to schedule posts automatically.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Platform Login Guide -->
+<div class="card">
+    <div class="card-header">
+        <h3>How to Connect a Platform</h3>
+    </div>
+    <div class="grid-2" style="gap:30px;">
+        <div>
+            <h4 style="margin-bottom:10px;">Instagram</h4>
+            <ol style="color:var(--text-dim);line-height:1.8;padding-left:20px;">
+                <li>Click "Add Profile" → select Instagram</li>
+                <li>Click "Open" to launch browser</li>
+                <li>Log in to Instagram manually</li>
+                <li>Browser stays logged in (cookies saved)</li>
+                <li>Return here and click "Check" to confirm</li>
+            </ol>
+        </div>
+        <div>
+            <h4 style="margin-bottom:10px;">TikTok</h4>
+            <ol style="color:var(--text-dim);line-height:1.8;padding-left:20px;">
+                <li>Add TikTok profile</li>
+                <li>Open browser and log in at tiktok.com</li>
+                <li>Cookies are auto-saved</li>
+                <li>Use Post Scheduler to queue videos</li>
+            </ol>
+        </div>
+        <div>
+            <h4 style="margin-bottom:10px;">YouTube</h4>
+            <ol style="color:var(--text-dim);line-height:1.8;padding-left:20px;">
+                <li>Add YouTube profile</li>
+                <li>Open and log in at youtube.com</li>
+                <li>Best for upload workflow via YouTube Studio</li>
+            </ol>
+        </div>
+        <div>
+            <h4 style="margin-bottom:10px;">Facebook</h4>
+            <ol style="color:var(--text-dim);line-height:1.8;padding-left:20px;">
+                <li>Add Facebook profile</li>
+                <li>Open browser and log in</li>
+                <li>Schedule posts for your Page or Profile</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="modal-add-profile">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Browser Profile</h3>
+            <button class="modal-close" onclick="closeModal('modal-add-profile')">&times;</button>
+        </div>
+        <form action="/social-profile/add" method="POST">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select name="platform" class="form-control" required>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="twitter">Twitter</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Profile Name</label>
+                    <input type="text" name="profile_name" class="form-control" value="default" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Username (optional)</label>
+                <input type="text" name="username" class="form-control" placeholder="@yourusername">
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-profile')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add &amp; Open Browser</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function openBrowser(platform, profileName) {
+    window.open(`/social-browser/${platform}/${profileName}/open`, '_blank', 'width=1280,height=800');
+}
+
+async function checkLogin(platform, profileName) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Checking...';
+    try {
+        const resp = await fetch(`/social-profile/${platform}/${profileName}/check`, {method: 'POST'});
+        const result = await resp.json();
+        location.reload();
+    } catch(e) {
+        alert('Error: ' + e);
+        btn.disabled = false;
+        btn.textContent = 'Check';
+    }
+}
+
+async function checkAllStatus() {
+    const btns = document.querySelectorAll('button[onclick^="checkLogin"]');
+    for (const btn of btns) {
+        btn.click();
+        await new Promise(r => setTimeout(r, 1000));
+    }
+}
+
+async function closeAllBrowsers() {
+    await fetch('/social-browser/close-all', {method: 'POST'});
+    location.reload();
+}
+
+function filterByStatus(status) {
+    const url = new URL(location);
+    if (status) url.searchParams.set('status', status);
+    else url.searchParams.delete('status');
+    location.href = url.toString();
+}
+
+function filterByPlatform(platform) {
+    const url = new URL(location);
+    if (platform) url.searchParams.set('platform', platform);
+    else url.searchParams.delete('platform');
+    location.href = url.toString();
+}
+</script>
+{% endblock %}

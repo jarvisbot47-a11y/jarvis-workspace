@@ -1,0 +1,617 @@
+{% extends "base.html" %}
+
+{% block title %}Vocal Separator - Marketing Manager{% endblock %}
+{% block page_title %}🎛 Vocal Separator{% endblock %}
+
+{% block topbar_actions %}
+<span style="font-size:12px;color:var(--text-dim);">AI-powered audio stem separation powered by Meta Demucs</span>
+{% endblock %}
+
+{% block content %}
+<style>
+.upload-zone {
+    border: 2px dashed var(--glass-border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--glass-bg);
+    margin-bottom: 20px;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(124, 106, 239, 0.08);
+    box-shadow: 0 0 30px var(--accent-glow);
+}
+.upload-zone .icon { font-size: 40px; margin-bottom: 12px; display: block; }
+.upload-zone .label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.upload-zone .sub { font-size: 11px; color: var(--text-dim); }
+.upload-zone input[type="file"] { display: none; }
+
+.controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+@media (max-width: 768px) {
+    .controls-row { grid-template-columns: 1fr; }
+}
+
+select {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='rgba(255,255,255,0.4)' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+.toggle-label { font-size: 13px; color: var(--text); flex: 1; }
+.toggle-label span { display: block; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* Toggle switch */
+.switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 24px;
+    transition: 0.3s;
+}
+.slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+input:checked + .slider { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+input:checked + .slider::before { transform: translateX(20px); }
+
+.stem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.stem-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 22px;
+    backdrop-filter: blur(20px);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.stem-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gradient);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.stem-card:hover { border-color: rgba(255,255,255,0.15); }
+.stem-card:hover::before { opacity: 1; }
+
+.stem-icon { font-size: 28px; margin-bottom: 10px; }
+.stem-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; text-transform: capitalize; }
+.stem-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+
+.audio-player {
+    width: 100%;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 10px;
+    outline: none;
+}
+
+.btn-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--glass-border);
+    border-radius: 9px;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-dl:hover {
+    background: rgba(124,106,239,0.15);
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.btn-sep {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 40px;
+    background: var(--gradient);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px var(--accent-glow);
+    margin-top: 6px;
+}
+.btn-sep:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+}
+
+.btn-zip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    background: var(--gradient);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-zip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.results-header h3 { font-size: 15px; font-weight: 700; }
+.time-badge {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--success);
+}
+
+.model-badge {
+    background: rgba(124,106,239,0.1);
+    border: 1px solid rgba(124,106,239,0.3);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--accent);
+}
+
+.info-box {
+    background: rgba(124, 106, 239, 0.06);
+    border: 1px solid rgba(124, 106, 239, 0.15);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    line-height: 1.7;
+}
+.info-box strong { color: var(--text); }
+
+.error-box {
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--danger);
+    margin-bottom: 24px;
+}
+
+.progress-section { text-align: center; padding: 40px; }
+.spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--glass-border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 18px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Mixer section */
+.mixer-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+.mixer-card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+.mixer-card p { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; }
+.mixer-stems {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.mixer-stem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+.mixer-stem:hover { border-color: rgba(255,255,255,0.15); }
+.mixer-stem.active {
+    background: rgba(124,106,239,0.12);
+    border-color: var(--accent);
+}
+.mixer-stem .stem-icon { font-size: 18px; margin: 0; }
+.mixer-stem .stem-label { font-size: 12px; color: var(--text); text-transform: capitalize; }
+.mixer-stem input[type="checkbox"] { display: none; }
+
+.mixer-preview {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+}
+.mixer-preview audio { width: 100%; margin-bottom: 12px; }
+
+.section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.model-info-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+.model-info-box .model-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+}
+.model-info-box .model-opt strong { color: var(--text); font-size: 11px; }
+.model-info-box .model-opt span { font-size: 10px; color: var(--text-dim); }
+</style>
+
+<div class="card">
+    <form id="upload-form" method="POST" enctype="multipart/form-data">
+        <!-- Model selector -->
+        <div class="section-label">🎚️ Model & Stems</div>
+        <div class="controls-row" style="margin-bottom:16px;">
+            <div>
+                <select name="model_name" id="model-select">
+                    <option value="htdemucs">htdemucs — Best Quality (4 stems)</option>
+                    <option value="htdemucs_ft">htdemucs_ft — Finer Tuned (4 stems, slower)</option>
+                    <option value="hdemucs">hdemucs — Hybrid (4 stems)</option>
+                    <option value="demucs">demucs — Original (4 stems)</option>
+                </select>
+            </div>
+            <div>
+                <select name="num_stems" id="stems-select">
+                    <option value="4">4 Stems — Vocals, Drums, Bass, Other</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Model info -->
+        <div class="model-info-box" id="model-info">
+            <div class="model-opt"><strong>htdemucs</strong><span>4 stems · Best quality · ~10s seg</span></div>
+            <div class="model-opt"><strong>htdemucs_ft</strong><span>4 stems · Finer tuned · Slower</span></div>
+            <div class="model-opt"><strong>hdemucs</strong><span>4 stems · Hybrid Demucs</span></div>
+            <div class="model-opt"><strong>demucs</strong><span>4 stems · Original model</span></div>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="upload-zone">
+            <span class="icon">🎵</span>
+            <div class="label" id="file-label">Drag & drop your audio file here</div>
+            <div class="sub">or click to browse · MP3, WAV, FLAC, M4A, OGG, AAC · Max 50MB</div>
+            <input type="file" name="audio_file" id="audio-file" accept=".mp3,.wav,.flac,.m4a,.ogg,.aac">
+        </div>
+
+        <!-- Toggles row -->
+        <div class="controls-row">
+            <label class="toggle-row">
+                <div class="toggle-label">
+                    🔊 Vocal Remover
+                    <span>Invert vocals stem to create instrumental-only track</span>
+                </div>
+                <div class="switch">
+                    <input type="checkbox" name="vocal_remover" id="vocal-remover" value="1">
+                    <span class="slider"></span>
+                </div>
+            </label>
+            <label class="toggle-row">
+                <div class="toggle-label">
+                    📊 Show Mixer
+                    <span>Enable stem mixer to preview custom combinations</span>
+                </div>
+                <div class="switch">
+                    <input type="checkbox" name="show_mixer" id="show-mixer" value="1">
+                    <span class="slider"></span>
+                </div>
+            </label>
+        </div>
+
+        <div style="text-align:center;">
+            <button type="submit" class="btn-sep" id="submit-btn">
+                🎛️ Separate Stems
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if error %}
+<div class="error-box">{{ error }}</div>
+{% endif %}
+
+{% if stems %}
+<div class="results-header">
+    <h3>🎶 Separated Stems</h3>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        {% if processing_time %}
+        <span class="time-badge">⚡ Processed in {{ processing_time }}s</span>
+        {% endif %}
+        <span class="model-badge">Model: {{ model_name }}</span>
+        {% if original_filename %}
+        <span style="font-size:11px;color:var(--text-dim);">{{ original_filename }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="stem-grid">
+    {% set stem_info = [
+        ('vocals', '🎤', 'Lead vocals & voice'),
+        ('drums', '🥁', 'Drums & percussion'),
+        ('bass', '🎸', 'Bass & low frequencies'),
+        ('other', '🎹', 'Other instruments & melody')
+    ] %}
+    {% for stem_name, stem_icon, stem_desc in stem_info %}
+    {% if stems.get(stem_name) %}
+    <div class="stem-card">
+        <div class="stem-icon">{{ stem_icon }}</div>
+        <div class="stem-name">{{ stem_name }}</div>
+        <div class="stem-desc">{{ stem_desc }}</div>
+        <audio controls class="audio-player" preload="none">
+            <source src="{{ stems[stem_name] }}" type="audio/wav">
+            Your browser does not support audio.
+        </audio>
+        <a href="{{ stems[stem_name] }}" download="{{ stem_name }}.wav" class="btn-dl">
+            ⬇️ WAV
+        </a>
+    </div>
+    {% endif %}
+    {% endfor %}
+    {% if stems.get('instrumental') %}
+    <div class="stem-card" style="border-color:rgba(124,106,239,0.4);box-shadow:0 0 20px var(--accent-glow);">
+        <div class="stem-icon">🎼</div>
+        <div class="stem-name">Instrumental</div>
+        <div class="stem-desc">Vocals removed — instrumental-only track</div>
+        <audio controls class="audio-player" preload="none">
+            <source src="{{ stems['instrumental'] }}" type="audio/wav">
+            Your browser does not support audio.
+        </audio>
+        <a href="{{ stems['instrumental'] }}" download="instrumental.wav" class="btn-dl" style="background:rgba(124,106,239,0.15);border-color:var(--accent);color:var(--text);">
+            ⬇️ WAV
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Stem Mixer Section -->
+<div class="mixer-card" id="mixer-section" style="display:none;">
+    <h4>🎚️ Stem Mixer</h4>
+    <p>Select stems to mix together. Uncheck "vocals" to create an instrumental mix.</p>
+    <div class="mixer-stems">
+        {% set mixer_stems = [
+            ('vocals', '🎤', 'Vocals'),
+            ('drums', '🥁', 'Drums'),
+            ('bass', '🎸', 'Bass'),
+            ('other', '🎹', 'Other')
+        ] %}
+        {% for s_name, s_icon, s_label in mixer_stems %}
+        {% if stems.get(s_name) %}
+        <label class="mixer-stem active" id="mixer-stem-{{ s_name }}">
+            <input type="checkbox" name="mix_stems" value="{{ s_name }}" checked
+                   onchange="updateMixer()">
+            <span class="stem-icon">{{ s_icon }}</span>
+            <span class="stem-label">{{ s_label }}</span>
+        </label>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <div class="mixer-preview">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;" id="mix-preview-label">
+            Preview: All stems combined
+        </div>
+        <audio id="mix-preview" controls preload="none">
+            <source src="{{ stems['other'] }}" type="audio/wav">
+            Your browser does not support audio.
+        </audio>
+        <div style="margin-top:10px;">
+            <a href="#" id="mix-download-link" class="btn-dl" download="mix.wav">⬇️ Download Mix</a>
+        </div>
+    </div>
+</div>
+
+<div style="text-align:center;margin-top:10px;">
+    {% set upload_id_val = '' %}
+    {% if stems.get('vocals') %}
+        {% set upload_id_val = stems['vocals'].split('/static/stems/')[1].split('/')[0] if '/static/stems/' in stems['vocals'] else '' %}
+    {% endif %}
+    <a href="{{ url_for('vocal_separator_download_all', upload_id=upload_id_val) }}" class="btn-zip">
+        📦 Download All Stems (.zip)
+    </a>
+</div>
+{% endif %}
+
+<div class="info-box" style="margin-top:30px;">
+    <strong>💡 About Demucs Stem Separation</strong><br>
+    Demucs (by Meta Research) uses deep learning to separate audio into <strong>4 stems</strong>: <strong>Vocals</strong>, <strong>Drums</strong>, <strong>Bass</strong>, and <strong>Other</strong> (instruments/melody).<br><br>
+    <strong>Models:</strong> <em>htdemucs</em> offers the best quality. <em>htdemucs_ft</em> is finer-tuned but slower. <em>hdemucs</em> is the hybrid model. <em>demucs</em> is the original.<br>
+    Processing time is approximately <strong>1–2× the audio length</strong> on CPU.
+</div>
+
+<script>
+const zone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('audio-file');
+const fileLabel = document.getElementById('file-label');
+const modelSelect = document.getElementById('model-select');
+const showMixerToggle = document.getElementById('show-mixer');
+
+zone.addEventListener('click', () => fileInput.click());
+zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileLabel.textContent = '✓ ' + e.dataTransfer.files[0].name;
+    }
+});
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) {
+        fileLabel.textContent = '✓ ' + fileInput.files[0].name;
+    }
+});
+
+document.getElementById('upload-form').addEventListener('submit', function() {
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '⏳ Processing... Please wait...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+});
+
+// Show/hide mixer section
+showMixerToggle.addEventListener('change', function() {
+    const mixer = document.getElementById('mixer-section');
+    if (this.checked) {
+        mixer.style.display = 'block';
+        updateMixer();
+    } else {
+        mixer.style.display = 'none';
+    }
+});
+
+{% if stems %}
+function updateMixer() {
+    const checkboxes = document.querySelectorAll('input[name="mix_stems"]');
+    const selected = Array.from(checkboxes)
+        .filter(c => c.checked)
+        .map(c => c.value);
+
+    const label = document.getElementById('mix-preview-label');
+    const audio = document.getElementById('mix-preview');
+    const dlLink = document.getElementById('mix-download-link');
+    const stemEls = document.querySelectorAll('.mixer-stem');
+
+    stemEls.forEach(el => {
+        const cb = el.querySelector('input[type="checkbox"]');
+        if (cb.checked) el.classList.add('active');
+        else el.classList.remove('active');
+    });
+
+    if (selected.length === 0) {
+        label.textContent = 'Select at least one stem';
+        return;
+    }
+
+    label.textContent = 'Mixing: ' + selected.join(' + ') + ' (client-side preview — download for full quality)';
+
+    // For preview, just use the 'other' stem as a stand-in (real mixing requires server)
+    // The actual mix URL will be generated server-side
+    const uploadId = '{{ upload_id_val }}';
+    const mixUrl = '/vocal-separator/mix/' + uploadId + '?stems=' + selected.join(',');
+    audio.src = mixUrl;
+    dlLink.href = mixUrl;
+    dlLink.download = 'mix_' + selected.join('_') + '.wav';
+}
+
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+  "name": "aiostream-clone",
+  "version": "1.0.0",
+  "description": "**Mystik Singh's All-in-One Music Promotion & Streaming Automation Platform**",
+  "main": "higgsfield-browser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@devicefarmer/adbkit": "^3.3.8",
+    "playwright": "^1.58.2"
+  }
+}

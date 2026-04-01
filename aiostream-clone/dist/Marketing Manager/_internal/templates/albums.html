@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Albums - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Albums{% endblock %}
+
+{% block topbar_actions %}
+<button onclick="openModal('add-album')" class="btn btn-primary">+ Add Album</button>
+{% endblock %}
+
+{% block content %}
+<div class="grid-3">
+    {% for album in albums %}
+    <div class="card" style="position: relative;">
+        <div style="height: 120px; background: linear-gradient(135deg, var(--accent-dim), #333); border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px;">
+            💿
+        </div>
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">{{ album.title }}</h3>
+        <div style="font-size: 13px; color: var(--text-dim); margin-bottom: 12px;">
+            Released: {{ album.release_date }} · {{ album.total_tracks }} tracks
+        </div>
+        <span class="badge badge-{{ album.status }}">{{ album.status|title }}</span>
+        {% if album.description %}
+        <p style="font-size: 12px; color: var(--text-dim); margin-top: 12px; line-height: 1.5;">{{ album.description[:150] }}...</p>
+        {% endif %}
+        <div style="display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;">
+            {% if album.spotify_url %}
+            <a href="{{ album.spotify_url }}" target="_blank" class="btn btn-secondary btn-xs">🎵 Spotify</a>
+            {% endif %}
+            <a href="{{ url_for('album_detail', album_id=album.id) }}" class="btn btn-secondary btn-xs">View Tracks</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not albums %}
+<div class="empty-state">
+    <div class="icon">💿</div>
+    <h3>No albums yet</h3>
+    <p>Add your first album to start managing your releases.</p>
+    <button onclick="openModal('add-album')" class="btn btn-primary">Add Album</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="add-album">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Album</h3>
+            <button class="modal-close" onclick="closeModal('add-album')">&times;</button>
+        </div>
+        <form action="{{ url_for('album_add') }}" method="post">
+            <div class="form-group">
+                <label>Album Title *</label>
+                <input type="text" name="title" class="form-control" required placeholder="e.g. Memento Mori Vol. 4">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Release Date</label>
+                    <input type="date" name="release_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option value="released">Released</option>
+                        <option value="planned">Planned</option>
+                        <option value="in_progress">In Progress</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Total Tracks</label>
+                <input type="number" name="total_tracks" class="form-control" placeholder="e.g. 14">
+            </div>
+            <div class="form-group">
+                <label>Spotify URL</label>
+                <input type="url" name="spotify_url" class="form-control" placeholder="https://open.spotify.com/album/...">
+            </div>
+            <div class="form-group">
+                <label>Apple Music URL</label>
+                <input type="url" name="apple_music_url" class="form-control" placeholder="https://music.apple.com/...">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" placeholder="Album description..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Album</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

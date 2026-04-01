@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Emulator Controller - Marketing Manager{% endblock %}
+{% block page_title %}📱 Emulator Controller{% endblock %}
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openModal('addInstanceModal')">+ New Instance</button>
+{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-success { background: rgba(76,175,80,0.2); color: var(--success); border: 1px solid rgba(76,175,80,0.4); }
+        .btn-warning { background: rgba(255,152,0,0.2); color: var(--warning); border: 1px solid rgba(255,152,0,0.4); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .instance-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .instance-card.running { border-color: var(--success); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(76,175,80,0.05) 100%); }
+        .instance-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .instance-name { font-size: 15px; font-weight: 700; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-running { background: var(--success); box-shadow: 0 0 6px var(--success); }
+        .status-stopped { background: var(--text-dim); }
+        .instance-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; }
+        .instance-meta span { display: flex; align-items: center; gap: 4px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-card .stat-value { font-size: 28px; font-weight: 700; }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 4px; }
+    
+    </style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>📱 Emulator Controller</h2><button class="btn btn-primary" onclick="openModal('addInstanceModal')">+ New Instance</button></div>
+        <div class="page-content">
+            <div class="grid-3">
+                <div class="stat-card"><div class="stat-value">{{ instances|length }}</div><div class="stat-label">Total Instances</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--success)">{{ instances|selectattr('status','equalto','running')|list|length }}</div><div class="stat-label">Running</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--text-dim)">{{ instances|selectattr('status','equalto','stopped')|list|length }}</div><div class="stat-label">Stopped</div></div>
+            </div>
+            {% for inst in instances %}
+            <div class="instance-card {% if inst.status == 'running' %}running{% endif %}">
+                <div class="instance-header">
+                    <div class="instance-name"><span class="status-dot status-{{ inst.status }}"></span>{{ inst.name }}</div>
+                    <div>
+                        {% if inst.status == 'running' %}
+                        <form action="/emulators/{{ inst.id }}/stop" method="POST" style="display:inline;"><button class="btn btn-sm btn-warning" type="submit">⏹️ Stop</button></form>
+                        {% else %}
+                        <form action="/emulators/{{ inst.id }}/start" method="POST" style="display:inline;"><button class="btn btn-sm btn-success" type="submit">▶️ Start</button></form>
+                        {% endif %}
+                        <button class="btn btn-sm btn-secondary" onclick="editInstance({{ inst }})">✏️</button>
+                        <form action="/emulators/{{ inst.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this instance?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                    </div>
+                </div>
+                <div class="instance-meta">
+                    <span>🤖 Android {{ inst.android_version or '12' }}</span>
+                    <span>📱 {{ inst.device_name or 'Generic Phone' }}</span>
+                    <span>📐 {{ inst.screen_width or 1080 }}x{{ inst.screen_height or 1920 }}</span>
+                    <span>🌐 {% if inst.proxy_string %}Proxy: {{ inst.proxy_string[:30] }} ({{ inst.city or inst.country or 'Unknown' }}){% else %}No Proxy{% endif %}</span>
+                    <span>🔒 {% if inst.account_name %}{{ inst.account_name }}{% else %}No Account{% endif %}</span>
+                    <span>🛡️ {% if inst.platform %}{{ inst.platform }}{% else %}Default{% endif %}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="card" style="text-align:center; padding:60px; color:var(--text-dim)">No emulator instances yet. Create your first instance to start automating mobile streaming.</div>
+            {% endfor %}
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+const deviceProfiles = {{ device_profiles|tojson }};
+        function updateDevice(name) { if(deviceProfiles[name]) { document.querySelector('[name=dpi]').value = deviceProfiles[name].dpi; } }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editInstance(inst) {
+            document.getElementById('edit_name').value = inst.name || '';
+            document.getElementById('edit_android_version').value = inst.android_version || '12';
+            document.getElementById('edit_cpu_cores').value = inst.cpu_cores || 2;
+            document.getElementById('edit_ram_mb').value = inst.ram_mb || 2048;
+            document.getElementById('edit_dpi').value = inst.dpi || 480;
+            document.getElementById('editInstanceForm').action = '/emulators/' + inst.id + '/edit';
+            openModal('editInstanceModal');
+        }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>{% endblock %}

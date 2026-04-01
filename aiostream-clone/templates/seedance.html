@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Seedance 2.0 - Marketing Manager{% endblock %}
+{% block page_title %}🎬 Seedance 2.0 Video Generation{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;align-items:center;">
+    <span id="muapi-status" class="badge" style="font-size:11px;"></span>
+    <a href="{{ url_for('content_creator') }}" class="btn btn-secondary">← Back to Content</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .seedance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media(max-width:900px) { .seedance-grid { grid-template-columns: 1fr; } }
+
+    .option-group { margin-bottom: 18px; }
+    .option-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+    .ratio-buttons, .duration-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ratio-btn, .duration-btn {
+        padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 600;
+        border: 1px solid var(--glass-border); background: var(--glass-bg);
+        color: var(--text-dim); cursor: pointer; transition: all 0.2s;
+    }
+    .ratio-btn:hover, .duration-btn:hover { border-color: var(--accent); color: var(--text); }
+    .ratio-btn.active, .duration-btn.active {
+        background: var(--accent); color: #fff; border-color: var(--accent);
+        box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px; color: var(--text); font-family: inherit; font-size: 13px; resize: vertical; min-height: 90px; transition: border-color 0.2s; }
+    textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    textarea::placeholder { color: var(--text-muted); }
+
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    input[type="number"], input[type="text"] { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 13px; }
+    input:focus { outline: none; border-color: var(--accent); }
+
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    .slider-row span { font-size: 11px; color: var(--text-dim); min-width: 40px; text-align: right; }
+
+    #progress-container { display: none; margin-top: 20px; }
+    .progress-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 10px; height: 8px; overflow: hidden; margin-bottom: 10px; }
+    .progress-bar { height: 100%; background: var(--gradient); border-radius: 10px; width: 0%; transition: width 0.5s ease; }
+    .progress-text { font-size: 12px; color: var(--text-dim); }
+
+    #preview-container { display: none; margin-top: 20px; }
+    #preview-container video { width: 100%; max-height: 400px; border-radius: 16px; border: 1px solid var(--glass-border); }
+    .preview-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+    .queue-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 8px; }
+    .queue-card .qc-info { flex: 1; }
+    .queue-card .qc-model { font-size: 11px; color: var(--accent); font-weight: 600; }
+    .queue-card .qc-prompt { font-size: 12px; color: var(--text-dim); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue-card .qc-time { font-size: 10px; color: var(--text-muted); }
+    .queue-card .qc-status { font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .status-queued { background: rgba(251,191,36,0.15); color: var(--warning); }
+    .status-processing { background: rgba(96,165,250,0.15); color: var(--info); }
+    .status-done { background: rgba(74,222,128,0.15); color: var(--success); }
+    .status-error { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-online { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+    .badge-offline { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+</style>
+
+<div class="seedance-grid">
+
+    <!-- LEFT: Generation Form -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h3>🎬 Generate Video</h3>
+                <span id="model-badge" style="font-size:11px;color:var(--text-dim);"></span>
+            </div>
+
+            <div class="option-group">
+                <label>Model</label>
+                <select id="model-select" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:13px;">
+                    {% for key, name in models.items() %}
+                    <option value="{{ key }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label>Prompt *</label>
+                <textarea id="prompt" placeholder="Describe the video you want to generate... e.g. 'A cinematic shot of a singer performing on a stage with dramatic lighting and confetti falling'" rows="4"></textarea>
+            </div>
+
+            <div class="option-group">
+                <label>Negative Prompt</label>
+                <textarea id="negative-prompt" placeholder="What to avoid: blur, low quality, distorted faces, artifacts..." rows="2"></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="option-group">
+                    <label>Aspect Ratio</label>
+                    <div class="ratio-buttons">
+                        <button class="ratio-btn active" data-ratio="9:16">9:16</button>
+                        <button class="ratio-btn" data-ratio="16:9">16:9</button>
+                        <button class="ratio-btn" data-ratio="1:1">1:1</button>
+                    </div>
+                </div>
+
+                <div class="option-group">
+                    <label>Duration</label>
+                    <div class="duration-buttons">
+                        <button class="duration-btn" data-duration="5s">5s</button>
+                        <button class="duration-btn active" data-duration="10s">10s</button>
+                        <button class="duration-btn" data-duration="32s">32s</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="option-group">
+                    <label>Seed (optional)</label>
+                    <input type="number" id="seed" placeholder="Random seed..." min="0" max="9999999999">
+                </div>
+                <div class="option-group">
+                    <label>Steps <span id="steps-val" style="color:var(--accent);float:right;">25</span></label>
+                    <div class="slider-row">
+                        <span>1</span>
+                        <input type="range" id="steps" min="1" max="50" value="25">
+                        <span>50</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="progress-container">
+                <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+                <div class="progress-text" id="progress-text">Initializing...</div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button class="btn btn-primary" id="btn-generate" onclick="generateVideo()" style="flex:1;">
+                    ⚡ Generate Video
+                </button>
+                <button class="btn btn-secondary" onclick="resetForm()" style="flex:0;">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Preview + Queue -->
+    <div>
+        <!-- Preview -->
+        <div class="card" id="preview-card" style="display:none;">
+            <div class="card-header">
+                <h3>🎞️ Preview</h3>
+                <span id="preview-meta" style="font-size:11px;color:var(--text-dim);"></span>
+            </div>
+            <div id="preview-container">
+                <video id="video-player" controls playsinline>
+                    <source id="video-source" src="" type="video/mp4">
+                    Your browser does not support video playback.
+                </video>
+                <div class="preview-actions">
+                    <a id="btn-download" class="btn btn-primary" download>
+                        ⬇ Download Video
+                    </a>
+                    <button class="btn btn-secondary" onclick="generateAgain()">
+                        🔄 Generate Again
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MuAPI Status -->
+        {% if not muapi_online %}
+        <div class="card" style="border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.05);">
+            <h3 style="color:var(--danger);font-size:13px;">⚠️ MuAPI Server Offline</h3>
+            <p style="font-size:12px;color:var(--text-dim);margin-top:8px;">
+                MuAPI is not running on <code>http://127.0.0.1:5000</code>.<br>
+                Start it with: <code>muapi serve</code> or check your configuration.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Queue / History -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📋 Recent Generations</h3>
+                <button class="btn btn-sm btn-secondary" onclick="loadQueue()">↻ Refresh</button>
+            </div>
+            <div id="queue-list">
+                <p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">
+                    No generations yet. Create your first video!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// State
+let currentJobId = null;
+let pollInterval = null;
+let lastPrompt = '';
+let lastModel = 'seedance-t2v-720p';
+
+// Helpers
+function getSelectedRatio() {
+    return document.querySelector('.ratio-btn.active').dataset.ratio;
+}
+function getSelectedDuration() {
+    return document.querySelector('.duration-btn.active').dataset.duration;
+}
+
+function setStatus(online) {
+    const el = document.getElementById('muapi-status');
+    if (online) {
+        el.className = 'badge badge-online';
+        el.textContent = '● MuAPI Online';
+    } else {
+        el.className = 'badge badge-offline';
+        el.textContent = '● MuAPI Offline';
+    }
+}
+
+// Ratio buttons
+document.querySelectorAll('.ratio-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// Duration buttons
+document.querySelectorAll('.duration-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// Steps slider
+document.getElementById('steps').addEventListener('input', e => {
+    document.getElementById('steps-val').textContent = e.target.value;
+});
+
+setStatus({{ 'true' if muapi_online else 'false' }});
+
+async function generateVideo() {
+    const prompt = document.getElementById('prompt').value.trim();
+    if (!prompt) { alert('Please enter a prompt.'); return; }
+
+    const model = document.getElementById('model-select').value;
+    const negativePrompt = document.getElementById('negative-prompt').value.trim();
+    const aspectRatio = getSelectedRatio();
+    const duration = getSelectedDuration();
+    const seed = document.getElementById('seed').value;
+    const steps = document.getElementById('steps').value;
+
+    const btn = document.getElementById('btn-generate');
+    btn.disabled = true;
+    btn.textContent = '⏳ Submitting...';
+
+    const payload = {
+        prompt,
+        model,
+        aspect_ratio: aspectRatio,
+        duration,
+        ...(negativePrompt && { negative_prompt: negativePrompt }),
+        ...(seed && { seed: parseInt(seed) }),
+        ...(steps && { steps: parseInt(steps) }),
+    };
+
+    lastPrompt = prompt;
+    lastModel = model;
+
+    try {
+        const res = await fetch('/seedance/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.error) { throw new Error(data.error); }
+
+        currentJobId = data.job_id;
+        document.getElementById('model-badge').textContent = model;
+        showProgress();
+        startPolling();
+    } catch (err) {
+        btn.disabled = false;
+        btn.textContent = '⚡ Generate Video';
+        alert('Generation failed: ' + err.message);
+    }
+}
+
+function showProgress() {
+    const container = document.getElementById('progress-container');
+    container.style.display = 'block';
+    document.getElementById('progress-bar').style.width = '10%';
+    document.getElementById('progress-text').textContent = 'Job queued...';
+}
+
+function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(pollStatus, 3000);
+}
+
+async function pollStatus() {
+    if (!currentJobId) return;
+    try {
+        const res = await fetch(`/seedance/status/${currentJobId}`);
+        const data = await res.json();
+        if (data.error) {
+            stopPolling('error');
+            document.getElementById('progress-text').textContent = 'Error: ' + data.error;
+            return;
+        }
+        updateProgress(data);
+    } catch (e) {
+        // Network error, keep polling
+    }
+}
+
+function updateProgress(data) {
+    const status = data.status || 'queued';
+    const bar = document.getElementById('progress-bar');
+    const text = document.getElementById('progress-text');
+
+    if (status === 'queued' || status === 'pending') {
+        bar.style.width = '15%';
+        text.textContent = '⏳ Waiting in queue...';
+    } else if (status === 'processing') {
+        const pct = data.progress || 30;
+        bar.style.width = Math.min(pct, 90) + '%';
+        text.textContent = `🎬 Processing... ${pct}%`;
+    } else if (status === 'done' || status === 'completed' || status === 'succeeded') {
+        stopPolling('done');
+        bar.style.width = '100%';
+        text.textContent = '✅ Video ready!';
+        showPreview(data);
+        addToQueue(data, currentJobId);
+        document.getElementById('btn-generate').disabled = false;
+        document.getElementById('btn-generate').textContent = '⚡ Generate Video';
+    } else if (status === 'error' || status === 'failed') {
+        stopPolling('error');
+        bar.style.width = '100%';
+        bar.style.background = 'var(--danger)';
+        text.textContent = '❌ Error: ' + (data.error || 'Generation failed');
+        document.getElementById('btn-generate').disabled = false;
+        document.getElementById('btn-generate').textContent = '⚡ Generate Video';
+    }
+}
+
+function stopPolling() {
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+function showPreview(data) {
+    const card = document.getElementById('preview-card');
+    card.style.display = 'block';
+    const container = document.getElementById('preview-container');
+    container.style.display = 'block';
+
+    const videoSrc = `/seedance/preview/${currentJobId}`;
+    document.getElementById('video-source').src = videoSrc;
+    const player = document.getElementById('video-player');
+    player.load();
+    player.play().catch(() => {});
+
+    const downloadBtn = document.getElementById('btn-download');
+    downloadBtn.href = `/seedance/download/${currentJobId}`;
+    downloadBtn.download = `seedance_${currentJobId}.mp4`;
+
+    document.getElementById('preview-meta').textContent =
+        `${lastModel} • ${data.aspect_ratio || getSelectedRatio()} • ${data.duration || getSelectedDuration()}`;
+
+    // Scroll to preview
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function generateAgain() {
+    document.getElementById('btn-generate').disabled = false;
+    document.getElementById('btn-generate').textContent = '⚡ Generate Video';
+    document.getElementById('preview-card').style.display = 'none';
+    document.getElementById('progress-container').style.display = 'none';
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-bar').style.background = '';
+    currentJobId = null;
+}
+
+function resetForm() {
+    document.getElementById('prompt').value = '';
+    document.getElementById('negative-prompt').value = '';
+    document.getElementById('seed').value = '';
+    document.getElementById('steps').value = 25;
+    document.getElementById('steps-val').textContent = '25';
+    generateAgain();
+}
+
+// Queue management
+const queue = [];
+
+function addToQueue(data, jobId) {
+    queue.unshift({
+        jobId,
+        model: lastModel,
+        prompt: lastPrompt,
+        status: 'done',
+        time: new Date().toLocaleTimeString(),
+        data,
+    });
+    if (queue.length > 10) queue.pop();
+    renderQueue();
+}
+
+function renderQueue() {
+    const el = document.getElementById('queue-list');
+    if (!queue.length) {
+        el.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">No generations yet.</p>';
+        return;
+    }
+    el.innerHTML = queue.map(item => `
+        <div class="queue-card">
+            <div class="qc-info">
+                <div class="qc-model">${item.model}</div>
+                <div class="qc-prompt">${item.prompt.substring(0, 60)}${item.prompt.length > 60 ? '...' : ''}</div>
+                <div class="qc-time">${item.time}</div>
+            </div>
+            <span class="qc-status status-${item.status}">${item.status}</span>
+            ${item.status === 'done' ? `<a href="/seedance/download/${item.jobId}" class="btn btn-sm btn-secondary" download>⬇</a>` : ''}
+        </div>
+    `).join('');
+}
+
+function loadQueue() {
+    renderQueue();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderQueue();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Anti-Detect Profiles - Marketing Manager{% endblock %}
+{% block page_title %}🛡️ Anti-Detect Profiles{% endblock %}
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openModal('addProfileModal')">+ New Profile</button>
+{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 640px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .profile-card:hover { border-color: var(--accent-dim); }
+        .profile-card.default { border-color: var(--accent-dim); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(200,164,90,0.05) 100%); }
+        .profile-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .profile-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; margin-top: 8px; }
+        .profile-meta span { display: flex; align-items: center; gap: 4px; }
+        .default-tag { background: var(--accent); color: #000; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    
+    </style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>🛡️ Anti-Detect Profiles</h2><button class="btn btn-primary" onclick="openModal('addProfileModal')">+ New Profile</button></div>
+        <div class="page-content">
+            <div class="card">
+                <div class="card-header"><h3>Fingerprint Profiles</h3></div>
+                {% for p in profiles %}
+                <div class="profile-card {% if p.is_default %}default{% endif %}">
+                    <h4>{{ p.name }}{% if p.is_default %}<span class="default-tag">Default</span>{% endif %}</h4>
+                    <div style="font-size:13px; color:var(--text-dim); margin-bottom:8px;">
+                        <code style="font-size:11px;">{{ p.user_agent[:80] if p.user_agent else 'No UA set' }}...</code>
+                    </div>
+                    <div class="profile-meta">
+                        <span>🖥️ {{ p.platform or 'Unknown' }}</span>
+                        <span>⏱️ Play: {{ p.play_length_secs or 30 }}s</span>
+                        <span>🖱️ Click: {{ p.click_interval_secs or 2 }}s</span>
+                        <span>📜 Scroll: {{ p.scroll_interval_secs or 5 }}s</span>
+                        <span>🐭 Move: {{ p.mouse_move_duration_secs or 3 }}s</span>
+                        <span>🔧 HW: {{ p.hardware_concurrency or '?' }} cores</span>
+                        <span>📺 {{ p.screen_resolution or 'Auto' }}</span>
+                    </div>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="btn btn-sm btn-secondary" onclick="editProfile({{ p }})">✏️ Edit</button>
+                        {% if not p.is_default %}
+                        <form action="/anti-detect/{{ p.id }}/delete" method="POST" onsubmit="return confirm('Delete this profile?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align:center; padding:40px; color:var(--text-dim)">No profiles yet. Create your first anti-detect profile.</div>
+                {% endfor %}
+            </div>
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editProfile(p) {
+            document.getElementById('edit_name').value = p.name || '';
+            document.getElementById('edit_platform').value = p.platform || 'Win32';
+            document.getElementById('edit_user_agent').value = p.user_agent || '';
+            document.getElementById('edit_hardware_concurrency').value = p.hardware_concurrency || 8;
+            document.getElementById('edit_device_memory').value = p.device_memory || 8;
+            document.getElementById('edit_play_length_secs').value = p.play_length_secs || 30;
+            document.getElementById('edit_click_interval_secs').value = p.click_interval_secs || 2;
+            document.getElementById('edit_scroll_interval_secs').value = p.scroll_interval_secs || 5;
+            document.getElementById('edit_mouse_move_duration_secs').value = p.mouse_move_duration_secs || 3;
+            document.getElementById('editProfileForm').action = '/anti-detect/' + p.id + '/edit';
+            openModal('editProfileModal');
+        }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>{% endblock %}

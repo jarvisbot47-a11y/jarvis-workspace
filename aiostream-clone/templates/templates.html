@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Email Templates - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Email Templates{% endblock %}
+
+{% block topbar_actions %}
+<button onclick="openModal('add-template')" class="btn btn-primary">+ New Template</button>
+{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <button class="tab active" onclick="filterTemplates('')">All ({{ templates|length }})</button>
+    <button class="tab" onclick="filterTemplates('initial')">Initial Pitches</button>
+    <button class="tab" onclick="filterTemplates('followup')">Follow-ups</button>
+    <button class="tab" onclick="filterTemplates('short')">Short / Quick</button>
+    <button class="tab" onclick="filterTemplates('thankyou')">Thank You</button>
+</div>
+
+<div class="grid-2">
+    {% for t in templates %}
+    <div class="card template-card" data-category="{{ t.category }}" style="border-left: 3px solid var(--accent);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div>
+                <h3 style="font-size: 15px; font-weight: 700;">{{ t.name }}</h3>
+                <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">
+                    {{ t.category }}
+                </span>
+            </div>
+            {% if t.is_default %}
+            <span style="font-size: 10px; padding: 3px 8px; background: var(--accent); color: #000; border-radius: 4px; font-weight: 700;">DEFAULT</span>
+            {% endif %}
+        </div>
+        <div style="margin-bottom: 12px;">
+            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Subject</div>
+            <div style="font-size: 13px; color: var(--accent);">{{ t.subject }}</div>
+        </div>
+        <div style="font-size: 12px; color: var(--text-dim); line-height: 1.6; max-height: 100px; overflow: hidden; position: relative;">
+            {{ t.body[:200] }}...
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 14px;">
+            <button class="btn btn-secondary btn-sm" onclick="viewTemplate({{ t.id }})">View Full</button>
+            <button class="btn btn-secondary btn-sm" onclick="editTemplate({{ t.id }})">Edit</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="view-template-modal">
+    <div class="modal" style="max-width: 640px;">
+        <div class="modal-header">
+            <h3 id="view-template-name">Template</h3>
+            <button class="modal-close" onclick="closeModal('view-template-modal')">&times;</button>
+        </div>
+        <div style="margin-bottom: 16px;">
+            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Subject</div>
+            <div id="view-template-subject" style="font-size: 14px; color: var(--accent);"></div>
+        </div>
+        <div>
+            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Body</div>
+            <div id="view-template-body" style="font-size: 13px; line-height: 1.7; white-space: pre-wrap; background: var(--bg-dark); padding: 16px; border-radius: 8px; max-height: 400px; overflow-y: auto;"></div>
+        </div>
+        <button onclick="copyTemplate()" class="btn btn-primary" style="margin-top: 16px; width: 100%;">📋 Copy Template</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="add-template">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Template</h3>
+            <button class="modal-close" onclick="closeModal('add-template')">&times;</button>
+        </div>
+        <form action="{{ url_for('template_add') }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Template Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" class="form-control">
+                        <option value="initial">Initial Pitch</option>
+                        <option value="followup">Follow-up</option>
+                        <option value="short">Short / Quick</option>
+                        <option value="thankyou">Thank You</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Subject Line</label>
+                <input type="text" name="subject" class="form-control" placeholder="Use {variable} for dynamic parts">
+            </div>
+            <div class="form-group">
+                <label>Body *</label>
+                <textarea name="body" class="form-control" style="min-height: 250px; font-family: monospace; font-size: 12px;" required placeholder="Hi {curator_name},&#10;&#10;Write your template here..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Variables (comma-separated)</label>
+                <input type="text" name="variables" class="form-control" placeholder="curator_name, playlist_name, track_title">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Save Template</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentTemplateBody = '';
+
+const allTemplates = {{ templates|tojson }};
+
+function viewTemplate(id) {
+    const t = allTemplates.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('view-template-name').textContent = t.name;
+    document.getElementById('view-template-subject').textContent = t.subject || '(no subject)';
+    document.getElementById('view-template-body').textContent = t.body;
+    currentTemplateBody = `Subject: ${t.subject || ''}\n\n${t.body}`;
+    openModal('view-template-modal');
+}
+
+function editTemplate(id) {
+    window.location.href = '/templates?edit=' + id;
+}
+
+function copyTemplate() {
+    navigator.clipboard.writeText(currentTemplateBody).then(() => alert('Template copied!'));
+}
+
+function filterTemplates(category) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.template-card').forEach(card => {
+        if (!category || card.dataset.category === category) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Manager - Marketing Manager</title>
+    <style>
+        :root {
+            --bg-dark: #0d0d0d; --bg-card: #1a1a1a; --bg-card-hover: #222;
+            --accent: #c8a45a; --accent-dim: #8a6d3b; --accent-glow: rgba(200, 164, 90, 0.15);
+            --text: #e0e0e0; --text-dim: #888; --border: #2a2a2a;
+            --success: #4caf50; --warning: #ff9800; --danger: #f44336; --info: #2196f3;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; background: #111; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-brand h1 { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .sidebar-brand span { font-size: 11px; color: var(--text-dim); display: block; margin-top: 2px; }
+        .sidebar nav { flex: 1; padding: 16px 0; }
+        .sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar nav a:hover { color: var(--text); background: var(--bg-card); }
+        .sidebar nav a.active { color: var(--accent); background: var(--accent-glow); border-left-color: var(--accent); }
+        .sidebar nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+        .main { margin-left: 240px; min-height: 100vh; }
+        .topbar { background: rgba(13,13,13,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h2 { font-size: 20px; font-weight: 600; }
+        .page-content { padding: 32px; max-width: 1400px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244, 67, 54, 0.1); color: var(--danger); border: 1px solid rgba(244, 67, 54, 0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-healthy { background: rgba(76,175,80,0.15); color: var(--success); }
+        .badge-dead { background: rgba(244,67,54,0.15); color: var(--danger); }
+        .badge-unknown { background: rgba(128,128,128,0.15); color: var(--text-dim); }
+        .badge-error { background: rgba(255,152,0,0.15); color: var(--warning); }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 560px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .filters-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+        .filters-bar select, .filters-bar input { padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; }
+        .geo-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-dim); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .stat-card .stat-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>⚡ Marketing Manager</h1>
+            <span>Mystik Singh</span>
+        </div>
+        <nav>
+            <a href="{{ url_for('index') }}" class="{% if page == 'dashboard' %}active{% endif %}"><span class="icon">📊</span> Dashboard</a>
+            <a href="{{ url_for('curators') }}" class="{% if page == 'curators' %}active{% endif %}"><span class="icon">👥</span> Curators</a>
+            <a href="{{ url_for('submissions') }}" class="{% if page == 'submissions' %}active{% endif %}"><span class="icon">📨</span> Submissions</a>
+            <a href="{{ url_for('albums') }}" class="{% if page == 'albums' %}active{% endif %}"><span class="icon">💿</span> Albums</a>
+            <a href="{{ url_for('tracks') }}" class="{% if page == 'tracks' %}active{% endif %}"><span class="icon">🎤</span> Tracks</a>
+            <a href="{{ url_for('releases') }}" class="{% if page == 'releases' %}active{% endif %}"><span class="icon">📅</span> Releases</a>
+            <a href="{{ url_for('proxies') }}" class="{% if page == 'proxies' %}active{% endif %}"><span class="icon">🌐</span> Proxy Manager</a>
+            <a href="{{ url_for('streaming_accounts') }}" class="{% if page == 'streaming_accounts' %}active{% endif %}"><span class="icon">🔒</span> Streaming Accounts</a>
+            <a href="{{ url_for('streaming_automation') }}" class="{% if page == 'streaming_automation' %}active{% endif %}"><span class="icon">▶️</span> Streaming Automation</a>
+            <a href="{{ url_for('account_creator') }}" class="{% if page == 'account_creator' %}active{% endif %}"><span class="icon">🔐</span> Account Creator</a>
+            <a href="{{ url_for('emulators') }}" class="{% if page == 'emulators' %}active{% endif %}"><span class="icon">📱</span> Emulators</a>
+            <a href="{{ url_for('scheduler') }}" class="{% if page == 'scheduler' %}active{% endif %}"><span class="icon">⏰</span> Scheduler</a>
+            <a href="{{ url_for('statistics') }}" class="{% if page == 'statistics' %}active{% endif %}"><span class="icon">📈</span> Statistics</a>
+            <a href="{{ url_for('tiktok') }}" class="{% if page == 'tiktok' %}active{% endif %}"><span class="icon">🎵</span> TikTok Bot</a>
+            <a href="{{ url_for('ai_playlists') }}" class="{% if page == 'ai_playlists' %}active{% endif %}"><span class="icon">🤖</span> AI Playlists</a>
+            <a href="{{ url_for('anti_detect') }}" class="{% if page == 'anti_detect' %}active{% endif %}"><span class="icon">🛡️</span> Anti-Detect</a>
+            <a href="{{ url_for('email_accounts') }}" class="{% if page == 'email_accounts' %}active{% endif %}"><span class="icon">📧</span> Email Accounts</a>
+            <a href="{{ url_for('profile') }}" class="{% if page == 'profile' %}active{% endif %}"><span class="icon">👤</span> My Profile</a>
+            <a href="{{ url_for('export') }}"><span class="icon">💾</span> Backup Data</a>
+        </nav>
+        <div class="sidebar-footer">Memento Mori Series<br>Vol. 1 · 2 · 3</div>
+    </aside>
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar">
+            <h2>🌐 Proxy Manager</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="openModal('addProxyModal')">+ Add Proxy</button>
+                <form action="/proxies/check-all" method="POST" style="display:inline;"><button class="btn btn-secondary" type="submit">🔄 Check All Health</button></form>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Total Proxies</div><div class="stat-value">{{ proxies|length }}</div></div>
+                <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" style="color:var(--success)">{{ proxies|selectattr('is_active')|list|length }}</div></div>
+                <div class="stat-card"><div class="stat-label">Healthy</div><div class="stat-value" style="color:var(--success)">{{ proxies|selectattr('health_status','equalto','healthy')|list|length }}</div></div>
+                <div class="stat-card"><div class="stat-label">Dead / Error</div><div class="stat-value" style="color:var(--danger)">{{ (proxies|selectattr('health_status','equalto','dead')|list|length) + (proxies|selectattr('health_status','equalto','error')|list|length) }}</div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Proxy List</h3></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Proxy String</th><th>Type</th><th>Location</th><th>ISP</th><th>Health</th><th>Success</th><th>Fail</th><th>Avg Response</th><th>Last Used</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        {% for p in proxies %}
+                        <tr>
+                            <td><code style="font-size:12px; color:var(--accent)">{{ p.proxy_string[:50] }}{% if p.proxy_string|length > 50 %}...{% endif %}</code></td>
+                            <td>{{ p.proxy_type or 'http' }}</td>
+                            <td><span class="geo-tag">📍 {{ p.city or 'Unknown' }}, {{ p.country or 'Unknown' }}</span></td>
+                            <td>{{ p.isp or '-' }}</td>
+                            <td><span class="badge badge-{{ p.health_status or 'unknown' }}">{{ p.health_status or 'unknown' }}</span></td>
+                            <td style="color:var(--success)">{{ p.success_count or 0 }}</td>
+                            <td style="color:var(--danger)">{{ p.fail_count or 0 }}</td>
+                            <td>{% if p.avg_response_ms %}{{ p.avg_response_ms }}ms{% else %}—{% endif %}</td>
+                            <td>{% if p.last_used %}{{ p.last_used[:10] }}{% else %}Never{% endif %}</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" onclick="editProxy({{ p }})">✏️</button>
+                                <form action="/proxies/{{ p.id }}/check" method="POST" style="display:inline;"><button class="btn btn-sm btn-secondary" type="submit">🔄</button></form>
+                                <form action="/proxies/{{ p.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this proxy?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-dim)">No proxies added yet. Add your first proxy above.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Add Proxy Modal -->
+    <div class="modal-overlay" id="addProxyModal">
+        <div class="modal">
+            <div class="modal-header"><h3>➕ Add Proxy</h3><button class="modal-close" onclick="closeModal('addProxyModal')">&times;</button></div>
+            <form action="/proxies/add" method="POST">
+                <div class="form-group"><label>Proxy String</label><input class="form-control" name="proxy_string" placeholder="IP:Port:Username:Password or user:pass@IP:Port" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Type</label><select class="form-control" name="proxy_type"><option value="http">HTTP</option><option value="socks5">SOCKS5</option><option value="socks4">SOCKS4</option></select></div>
+                    <div class="form-group"><label>Rotation Strategy</label><select class="form-control" name="rotation_strategy"><option value="sequential">Sequential</option><option value="random">Random</option><option value="round_robin">Round Robin</option></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Country</label><input class="form-control" name="country" placeholder="US, UK, CA..."></div>
+                    <div class="form-group"><label>City</label><input class="form-control" name="city" placeholder="New York..."></div>
+                </div>
+                <div class="form-group"><label>ISP</label><input class="form-control" name="isp" placeholder="ISP Name"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Latitude</label><input class="form-control" name="geo_lat" placeholder="40.7128"></div>
+                    <div class="form-group"><label>Longitude</label><input class="form-control" name="geo_lon" placeholder="-74.0060"></div>
+                </div>
+                <div class="form-group"><label>Notes</label><textarea class="form-control" name="notes" rows="2"></textarea></div>
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1">Add Proxy</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addProxyModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Edit Proxy Modal -->
+    <div class="modal-overlay" id="editProxyModal">
+        <div class="modal">
+            <div class="modal-header"><h3>✏️ Edit Proxy</h3><button class="modal-close" onclick="closeModal('editProxyModal')">&times;</button></div>
+            <form id="editProxyForm" method="POST">
+                <div class="form-group"><label>Proxy String</label><input class="form-control" name="proxy_string" id="edit_proxy_string"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Type</label><select class="form-control" name="proxy_type" id="edit_proxy_type"><option value="http">HTTP</option><option value="socks5">SOCKS5</option><option value="socks4">SOCKS4</option></select></div>
+                    <div class="form-group"><label>Rotation Strategy</label><select class="form-control" name="rotation_strategy" id="edit_rotation_strategy"><option value="sequential">Sequential</option><option value="random">Random</option><option value="round_robin">Round Robin</option></select></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Country</label><input class="form-control" name="country" id="edit_country"></div>
+                    <div class="form-group"><label>City</label><input class="form-control" name="city" id="edit_city"></div>
+                </div>
+                <div class="form-group"><label>ISP</label><input class="form-control" name="isp" id="edit_isp"></div>
+                <div class="form-group"><label>Active</label><select class="form-control" name="is_active" id="edit_is_active"><option value="1">Yes</option><option value="0">No</option></select></div>
+                <div class="form-group"><label>Notes</label><textarea class="form-control" name="notes" id="edit_notes" rows="2"></textarea></div>
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary" style="flex:1">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editProxyModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editProxy(p) {
+            document.getElementById('edit_proxy_string').value = p.proxy_string || '';
+            document.getElementById('edit_proxy_type').value = p.proxy_type || 'http';
+            document.getElementById('edit_rotation_strategy').value = p.rotation_strategy || 'sequential';
+            document.getElementById('edit_country').value = p.country || '';
+            document.getElementById('edit_city').value = p.city || '';
+            document.getElementById('edit_isp').value = p.isp || '';
+            document.getElementById('edit_is_active').value = p.is_active ? '1' : '0';
+            document.getElementById('edit_notes').value = p.notes || '';
+            document.getElementById('editProxyForm').action = '/proxies/' + p.id + '/edit';
+            openModal('editProxyModal');
+        }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>
+</body>
+</html>

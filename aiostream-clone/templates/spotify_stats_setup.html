@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Spotify Stats Setup - Marketing Manager{% endblock %}
+{% block page_title %}🎧 Spotify Stats Setup{% endblock %}
+
+{% block content %}
+<style>
+.setup-card { max-width: 600px; margin: 0 auto; }
+.setup-card .card { padding: 32px; }
+.info-box { background: rgba(200,164,90,0.1); border: 1px solid rgba(200,164,90,0.3); border-radius: 10px; padding: 16px; margin-bottom: 24px; font-size: 14px; line-height: 1.7; }
+.info-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
+.cred-status { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; }
+.cred-status.active { background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+.cred-status.inactive { background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+.test-result { padding: 12px 16px; border-radius: 8px; margin-top: 16px; }
+.test-result.success { background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+</style>
+
+<div class="setup-card">
+    <div class="card">
+        <div class="card-header">
+            <h3>Configure Spotify Stats</h3>
+        </div>
+
+        <div class="info-box">
+            <h4>How it works</h4>
+            Spotify for Artists (artist-analytics.spotify.com) shows real streaming data —
+            monthly listeners, streams, followers, playlist placements, and demographics.
+            <br><br>
+            <strong>To access real data:</strong> Any Spotify <em>Premium</em> account
+            that has claimed the artist page can log in. The scraper uses Playwright
+            to automate the browser and read your real stats.
+            <br><br>
+            <strong>No Premium?</strong> Stats will fall back to data logged by the
+            streaming automation (real stream counts from your account pool).
+        </div>
+
+        <!-- Current status -->
+        <div class="cred-status {% if has_creds %}active{% else %}inactive{% endif %}">
+            {% if has_creds %}
+            ✓ Spotify credentials configured — real stats will be scraped
+            {% else %}
+            ✗ No credentials — using activity log estimates only
+            {% endif %}
+        </div>
+
+        {% if error %}
+        <div style="color: var(--danger); padding: 10px; margin-bottom: 16px; font-size: 14px;">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>Spotify Email</label>
+                <input type="email" name="email" class="form-control"
+                       placeholder="your@email.com"
+                       value="{{ request.form.email|default('') }}">
+            </div>
+            <div class="form-group">
+                <label>Spotify Password</label>
+                <input type="password" name="password" class="form-control"
+                       placeholder="••••••••">
+                <div style="font-size: 12px; color: var(--text-dim); margin-top: 5px;">
+                    Stored locally at <code>spotify_stats_credentials.json</code> — never sent anywhere
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Save Credentials</button>
+                {% if has_creds %}
+                <a href="{{ url_for('spotify_stats_setup', test='1') }}" class="btn btn-secondary">Test Connection</a>
+                {% endif %}
+                <a href="{{ url_for('spotify_stats') }}" class="btn btn-secondary">← Back to Stats</a>
+            </div>
+        </form>
+
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <h4 style="font-size: 13px; font-weight: 700; margin-bottom: 12px;">What data is shown?</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                <div>✓ Monthly Listeners</div>
+                <div>✓ Streams (28 days)</div>
+                <div>✓ Follower count</div>
+                <div>✓ Save rate</div>
+                <div>✓ Top countries</div>
+                <div>✓ Traffic sources</div>
+                <div>✓ Top tracks</div>
+                <div>✓ Playlist placements</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

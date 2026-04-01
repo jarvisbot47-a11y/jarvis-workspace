@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Follow-Up Queue - Outreach{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1>📬 Follow-Up Queue</h1>
+        <p>Curators who haven't responded yet — send follow-ups to boost your chances!</p>
+    </div>
+    <a href="{{ url_for('outreach_dashboard') }}" class="btn btn-secondary">← Dashboard</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+    <div class="card">
+        <div class="card-header">
+            <h2>📧 Follow-up Level 1</h2>
+            <span style="font-size: 12px; color: var(--text-dim);">3+ days after initial pitch</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if follow_ups.level_1 %}
+            <table class="data-table" style="width: 100%;">
+                <tbody>
+                    {% for email in follow_ups.level_1 %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; font-size: 13px;">{{ email.curator_name }}</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">{{ email.playlist_name }}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Sent: {{ email.sent_at[:10] if email.sent_at else '—' }}</div>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-small btn-primary" onclick="sendFollowUp({{ email.id }}, {{ email.curator_id }}, 1)">Send</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 32px; color: var(--text-dim); font-size: 13px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                No pending follow-ups!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>📧 Follow-up Level 2</h2>
+            <span style="font-size: 12px; color: var(--text-dim);">7+ days after initial pitch</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if follow_ups.level_2 %}
+            <table class="data-table" style="width: 100%;">
+                <tbody>
+                    {% for email in follow_ups.level_2 %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; font-size: 13px;">{{ email.curator_name }}</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">{{ email.playlist_name }}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Sent: {{ email.sent_at[:10] if email.sent_at else '—' }}</div>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-small btn-primary" onclick="sendFollowUp({{ email.id }}, {{ email.curator_id }}, 2)">Send</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 32px; color: var(--text-dim); font-size: 13px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                No pending follow-ups!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>📧 Follow-up Level 3 (Final)</h2>
+            <span style="font-size: 12px; color: var(--text-dim);">14+ days after initial pitch</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if follow_ups.level_3 %}
+            <table class="data-table" style="width: 100%;">
+                <tbody>
+                    {% for email in follow_ups.level_3 %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; font-size: 13px;">{{ email.curator_name }}</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">{{ email.playlist_name }}</div>
+                            <div style="font-size: 10px; color: var(--text-muted);">Sent: {{ email.sent_at[:10] if email.sent_at else '—' }}</div>
+                        </td>
+                        <td style="text-align: right;">
+                            <button class="btn btn-small btn-primary" onclick="sendFollowUp({{ email.id }}, {{ email.curator_id }}, 3)">Send</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 32px; color: var(--text-dim); font-size: 13px;">
+                <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                No pending follow-ups!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Auto-Follow-Up Info -->
+<div class="card">
+    <div class="card-header">
+        <h2>🤖 Auto-Follow-Up Rules</h2>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+            <div style="padding: 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                <div style="font-weight: 700; font-size: 18px; color: var(--info); margin-bottom: 4px;">Day 3</div>
+                <div style="font-size: 13px;">First follow-up if no response</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Friendly bump, link reminder</div>
+            </div>
+            <div style="padding: 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                <div style="font-weight: 700; font-size: 18px; color: var(--warning); margin-bottom: 4px;">Day 7</div>
+                <div style="font-size: 13px;">Second follow-up if still no response</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">More persistent reminder</div>
+            </div>
+            <div style="padding: 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                <div style="font-weight: 700; font-size: 18px; color: var(--accent-2); margin-bottom: 4px;">Day 14</div>
+                <div style="font-size: 13px;">Final follow-up if still no response</div>
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Last attempt, stays professional</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function sendFollowUp(emailId, curatorId, level) {
+    const btn = event.target;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    try {
+        const res = await fetch('/outreach/follow-up/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email_id: emailId, curator_id: curatorId, follow_up_level: level})
+        });
+        const data = await res.json();
+        if (data.success) {
+            btn.textContent = 'Sent!';
+            btn.style.background = 'var(--success)';
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+            btn.textContent = 'Send';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        alert('Error: ' + e.message);
+        btn.textContent = 'Send';
+        btn.disabled = false;
+    }
+}
+</script>
+
+<style>
+.data-table { border-collapse: collapse; }
+.data-table td { padding: 12px 16px; border-bottom: 1px solid var(--glass-border); }
+.data-table tbody tr:hover { background: var(--glass-bg-hover); }
+.btn-small { padding: 5px 12px; font-size: 11px; }
+</style>
+{% endblock %}

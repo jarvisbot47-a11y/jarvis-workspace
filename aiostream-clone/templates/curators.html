@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Curators - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Curators{% endblock %}
+
+{% block topbar_actions %}
+<a href="javascript:openModal('add-curator')" class="btn btn-primary">+ Add Curator</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="filters-bar">
+    <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+        <select name="genre" class="form-control" style="width: auto;" onchange="this.form.submit()">
+            <option value="">All Genres</option>
+            <option value="Hip Hop" {% if filters.get('genre_focus')=='Hip Hop' %}selected{% endif %}>Hip Hop</option>
+            <option value="Trap" {% if filters.get('genre_focus')=='Trap' %}selected{% endif %}>Trap</option>
+            <option value="Boom Bap" {% if filters.get('genre_focus')=='Boom Bap' %}selected{% endif %}>Boom Bap</option>
+            <option value="Conscious Hip Hop" {% if filters.get('genre_focus')=='Conscious Hip Hop' %}selected{% endif %}>Conscious Hip Hop</option>
+            <option value="Lo-fi Hip Hop" {% if filters.get('genre_focus')=='Lo-fi Hip Hop' %}selected{% endif %}>Lo-fi Hip Hop</option>
+            <option value="Chill Hip Hop" {% if filters.get('genre_focus')=='Chill Hip Hop' %}selected{% endif %}>Chill Hip Hop</option>
+        </select>
+        <select name="platform" class="form-control" style="width: auto;" onchange="this.form.submit()">
+            <option value="">All Platforms</option>
+            <option value="Spotify" {% if filters.get('platform')=='Spotify' %}selected{% endif %}>Spotify</option>
+            <option value="Apple Music" {% if filters.get('platform')=='Apple Music' %}selected{% endif %}>Apple Music</option>
+            <option value="SoundCloud" {% if filters.get('platform')=='SoundCloud' %}selected{% endif %}>SoundCloud</option>
+        </select>
+        <select name="status" class="form-control" style="width: auto;" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="active" {% if filters.get('status')=='active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if filters.get('status')=='inactive' %}selected{% endif %}>Inactive</option>
+            <option value="banned" {% if filters.get('status')=='banned' %}selected{% endif %}>Banned</option>
+        </select>
+        <a href="{{ url_for('curators') }}" class="btn btn-secondary btn-sm">Clear</a>
+    </form>
+    <span style="margin-left: auto; color: var(--text-dim); font-size: 13px;">{{ curators|length }} curators</span>
+</div>
+
+<!-- Curator Grid -->
+<div class="grid-2">
+    {% for curator in curators %}
+    <div class="curator-card">
+        <div class="curator-header">
+            <div>
+                <div class="curator-name">{{ curator.name }}</div>
+                <div class="playlist-name">{{ curator.playlist_name }}</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge badge-{{ curator.status }}">{{ curator.status }}</span>
+                <span class="stars">{{ '★' * (curator.rating|int) }}{{ '☆' * (5 - (curator.rating|int)) }}</span>
+            </div>
+        </div>
+        <div class="curator-meta">
+            {% if curator.platform %}
+            <span>🎵 {{ curator.platform }}</span>
+            {% endif %}
+            {% if curator.genre_focus %}
+            <span>🏷️ {{ curator.genre_focus }}</span>
+            {% endif %}
+            {% if curator.follower_count %}
+            <span>👥 {{ curator.follower_count if curator.follower_count else '—' }}</span>
+            {% endif %}
+            {% if curator.response_rate %}
+            <span>📈 {{ curator.response_rate }}% response</span>
+            {% endif %}
+            {% if curator.last_contacted %}
+            <span>🕐 Last: {{ curator.last_contacted }}</span>
+            {% endif %}
+        </div>
+        {% if curator.notes %}
+        <p style="font-size: 12px; color: var(--text-dim); margin-top: 10px; line-height: 1.5;">{{ curator.notes }}</p>
+        {% endif %}
+        <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+            <a href="{{ curator.playlist_url }}" target="_blank" class="btn btn-secondary btn-xs">🔗 Playlist</a>
+            {% if curator.email %}
+            <a href="mailto:{{ curator.email }}" class="btn btn-secondary btn-xs">✉️ Email</a>
+            {% endif %}
+            {% if curator.website %}
+            <a href="{{ curator.website }}" target="_blank" class="btn btn-secondary btn-xs">🌐 Website</a>
+            {% endif %}
+            <a href="{{ url_for('curator_detail', curator_id=curator.id) }}" class="btn btn-secondary btn-xs">View Details</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not curators %}
+<div class="empty-state">
+    <div class="icon">👥</div>
+    <h3>No curators found</h3>
+    <p>Add your first curator to start building your network.</p>
+    <a href="javascript:openModal('add-curator')" class="btn btn-primary">Add First Curator</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="add-curator">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add New Curator</h3>
+            <button class="modal-close" onclick="closeModal('add-curator')">&times;</button>
+        </div>
+        <form action="{{ url_for('curator_add') }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Curator / Contact Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Playlist Name</label>
+                    <input type="text" name="playlist_name" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select name="platform" class="form-control">
+                        <option value="Spotify">Spotify</option>
+                        <option value="Apple Music">Apple Music</option>
+                        <option value="SoundCloud">SoundCloud</option>
+                        <option value="YouTube">YouTube</option>
+                        <option value="Tidal">Tidal</option>
+                        <option value="Deezer">Deezer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Playlist URL</label>
+                    <input type="url" name="playlist_url" class="form-control" placeholder="https://...">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Genre Focus</label>
+                    <select name="genre_focus" class="form-control">
+                        <option value="">—</option>
+                        <option value="Hip Hop">Hip Hop</option>
+                        <option value="Trap">Trap</option>
+                        <option value="Boom Bap">Boom Bap</option>
+                        <option value="Conscious Hip Hop">Conscious Hip Hop</option>
+                        <option value="Lo-fi Hip Hop">Lo-fi Hip Hop</option>
+                        <option value="Chill Hip Hop">Chill Hip Hop</option>
+                        <option value="Underground Hip Hop">Underground Hip Hop</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Follower Count</label>
+                    <input type="number" name="follower_count" class="form-control" placeholder="e.g. 5000">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Rating (1-5)</label>
+                    <select name="rating" class="form-control">
+                        <option value="1">★☆☆☆☆ - Poor</option>
+                        <option value="2">★★☆☆☆ - Fair</option>
+                        <option value="3" selected>★★★☆☆ - Good</option>
+                        <option value="4">★★★★☆ - Great</option>
+                        <option value="5">★★★★★ - Top Tier</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control" placeholder="Submission preferences, tips, etc."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Source</label>
+                <input type="text" name="source" class="form-control" placeholder="e.g. SubmitHub, Groover, Direct, Playlist Push">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Curator</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

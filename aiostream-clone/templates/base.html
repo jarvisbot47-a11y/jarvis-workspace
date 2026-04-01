@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Marketing Manager - Mystik Singh{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg-hover: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #7c6aef;
+            --accent-2: #ec6a88;
+            --accent-glow: rgba(124, 106, 239, 0.2);
+            --accent-2-glow: rgba(236, 106, 136, 0.2);
+            --text: rgba(255, 255, 255, 0.9);
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --text-muted: rgba(255, 255, 255, 0.25);
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --info: #60a5fa;
+            --gradient: linear-gradient(135deg, var(--accent), var(--accent-2));
+            --gradient-glow: 0 4px 20px var(--accent-glow), 0 0 40px var(--accent-glow);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: 260px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            overflow-y: auto;
+            box-shadow: 4px 0 32px rgba(0,0,0,0.4);
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            margin: 0;
+        }
+        .sidebar-brand-inner {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 16px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sidebar-brand-logo {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: var(--gradient-glow);
+            flex-shrink: 0;
+        }
+        .sidebar-brand-text h1 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+        }
+        .sidebar-brand-text span {
+            font-size: 10px;
+            color: var(--text-dim);
+            display: block;
+            margin-top: 1px;
+        }
+        .status-dot {
+            width: 7px; height: 7px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .sidebar nav { flex: 1; padding: 14px 0 20px; }
+
+        /* Sidebar groups */
+        .sidebar-group { margin-bottom: 4px; }
+        .sidebar-group-header {
+            padding: 10px 20px 5px;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .sidebar-group-header .emoji { font-size: 11px; }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 9px 20px;
+            margin: 1px 10px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 12.5px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            position: relative;
+        }
+        .sidebar nav a:hover {
+            color: var(--text);
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border);
+        }
+        .sidebar nav a.active {
+            color: var(--text);
+            background: var(--glass-bg);
+            border: 1px solid transparent;
+            box-shadow: inset 0 0 0 1px var(--accent), 0 0 20px var(--accent-glow);
+        }
+        .sidebar nav a.active::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 11px;
+            padding: 1px;
+            background: var(--gradient);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
+        .sidebar nav a .icon { font-size: 14px; width: 22px; text-align: center; flex-shrink: 0; }
+
+        .sidebar-divider {
+            padding: 6px 20px;
+            margin: 6px 10px;
+            border-top: 1px solid var(--glass-border);
+        }
+        .sidebar-divider a { margin: 0; border-radius: 0; border: none; }
+        .sidebar-divider a:hover { background: none; border: none; }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--glass-border);
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--glass-bg);
+        }
+
+        /* ── Main content ── */
+        .main { margin-left: 260px; min-height: 100vh; }
+
+        .topbar {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 18px 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        }
+        .topbar h2 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            color: var(--text);
+        }
+
+        .page-content { padding: 36px; max-width: 1400px; }
+
+        /* ── Glass Card ── */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 26px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.25s ease;
+        }
+        .card:hover {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+        .card-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.2px;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+            font-family: inherit;
+            letter-spacing: 0.1px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: #fff;
+            box-shadow: var(--gradient-glow);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 6px 28px var(--accent-glow), 0 0 60px var(--accent-glow);
+        }
+        .btn-primary:active { transform: translateY(0) scale(0.99); }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+            background: var(--glass-bg-hover);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.18);
+            border-color: rgba(248, 113, 113, 0.4);
+            box-shadow: 0 0 20px rgba(248, 113, 113, 0.15);
+        }
+
+        .btn-success {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+        .btn-success:hover {
+            background: rgba(74, 222, 128, 0.18);
+            border-color: rgba(74, 222, 128, 0.4);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+        }
+
+        .btn-sm { padding: 6px 13px; font-size: 11px; border-radius: 10px; }
+        .btn-xs { padding: 4px 10px; font-size: 10px; border-radius: 8px; }
+
+        /* ── Forms ── */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 7px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 0 20px var(--accent-glow);
+        }
+        .form-control::placeholder { color: var(--text-muted); }
+        select.form-control { cursor: pointer; }
+        textarea.form-control { resize: vertical; min-height: 90px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        /* ── Tables ── */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+        .table-wrapper::-webkit-scrollbar { height: 5px; }
+        .table-wrapper::-webkit-scrollbar-track { background: transparent; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 5px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            text-align: left;
+            padding: 13px 16px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        tbody tr { transition: all 0.15s ease; }
+        tbody tr:hover {
+            background: var(--glass-bg-hover);
+            box-shadow: inset 0 0 30px var(--accent-glow);
+        }
+        tbody td {
+            padding: 14px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--glass-border);
+            vertical-align: middle;
+            color: var(--text);
+        }
+        tbody tr:last-child td { border-bottom: none; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .badge-pending {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--warning);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.1);
+        }
+        .badge-approved, .badge-active {
+            background: rgba(74, 222, 128, 0.1);
+            color: var(--success);
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.1);
+        }
+        .badge-rejected {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--danger);
+            box-shadow: 0 0 12px rgba(248, 113, 113, 0.1);
+        }
+        .badge-noresponse {
+            background: rgba(96, 165, 250, 0.1);
+            color: var(--info);
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.1);
+        }
+        .badge-planned {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--warning);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.1);
+        }
+        .badge-released {
+            background: rgba(124, 106, 239, 0.1);
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(124, 106, 239, 0.1);
+        }
+
+        /* ── Flash Messages ── */
+        .flash {
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid transparent;
+        }
+        .flash-success {
+            background: rgba(74, 222, 128, 0.08);
+            border-color: rgba(74, 222, 128, 0.2);
+            color: var(--success);
+        }
+        .flash-error {
+            background: rgba(248, 113, 113, 0.08);
+            border-color: rgba(248, 113, 113, 0.2);
+            color: var(--danger);
+        }
+        .flash-info {
+            background: rgba(96, 165, 250, 0.08);
+            border-color: rgba(96, 165, 250, 0.2);
+            color: var(--info);
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: rgba(15, 15, 20, 0.95);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 560px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .modal-header h3 { font-size: 16px; font-weight: 700; }
+        .modal-close {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 10px;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { color: var(--text); background: var(--glass-bg-hover); }
+
+        /* ── Filters ── */
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filters-bar select, .filters-bar input {
+            padding: 8px 14px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: inherit;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .filters-bar select:focus, .filters-bar input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* ── Stats Grid ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 22px 18px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.25s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.12);
+        }
+        .stat-card .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card .stat-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ── Platform Badge ── */
+        .platform-badge {
+            display: inline-flex;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(124, 106, 239, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(124, 106, 239, 0.2);
+            box-shadow: 0 0 12px rgba(124, 106, 239, 0.1);
+        }
+
+        /* ── Grids ── */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+        /* ── Quick Actions ── */
+        .quick-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* ── Empty State ── */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-dim); }
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+        .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+        .empty-state p { font-size: 13px; margin-bottom: 20px; }
+
+        /* ── Animations ── */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--success); }
+            50% { opacity: 0.6; box-shadow: 0 0 16px var(--success); }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card { animation: fade-in 0.3s ease; }
+        .stat-card { animation: fade-in 0.3s ease; }
+
+        /* ── Scrollbar global ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 6px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 1024px) {
+            .sidebar { width: 220px; }
+            .main { margin-left: 220px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        /* ── Inherited inline-style overrides ── */
+        /* These handle common inline style patterns from page templates */
+
+        /* Sidebar brand padding override */
+        .sidebar-brand { padding: 20px 20px; }
+        .sidebar-brand .brand-wrap { display: flex; flex-direction: column; }
+
+        /* Stat card specific text colors for certain values */
+        .text-success { color: var(--success) !important; }
+        .text-danger { color: var(--danger) !important; }
+        .text-warning { color: var(--warning) !important; }
+        .text-info { color: var(--info) !important; }
+        .text-muted { color: var(--text-dim) !important; }
+
+        /* Glow accent on active elements */
+        .accent-glow { box-shadow: 0 0 20px var(--accent-glow) !important; }
+
+        /* Compact card variant */
+        .card-compact { padding: 18px; }
+
+        /* Tab-like header separator */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .section-header h3 { font-size: 14px; font-weight: 600; }
+
+        /* Activity timeline */
+        .timeline { position: relative; padding-left: 24px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px; top: 0; bottom: 0;
+            width: 1px;
+            background: var(--glass-border);
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 18px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px; top: 4px;
+            width: 8px; height: 8px;
+            background: var(--gradient);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Flex utilities */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-3 { margin-top: 12px; }
+        .mt-4 { margin-top: 16px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+        .text-sm { font-size: 12px; }
+        .text-xs { font-size: 10px; }
+        .font-bold { font-weight: 700; }
+        .text-right { text-align: right; }
+        .w-full { width: 100%; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-inner">
+                <div class="sidebar-brand-logo">&#9889;</div>
+                <div class="sidebar-brand-text">
+                    <h1>Marketing Manager</h1>
+                    <span>Mystik Singh</span>
+                </div>
+                <div class="status-dot" title="System Active"></div>
+            </div>
+        </div>
+        <nav>
+            <!-- 🎵 MUSIC -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">🎵</span> Music</div>
+                <a href="{{ url_for("index") }}" class="{% if page == "dashboard" %}active{% endif %}"><span class="icon">&#128200;</span> Dashboard</a>
+                <a href="{{ url_for("albums") }}" class="{% if page == "albums" %}active{% endif %}"><span class="icon">&#128191;</span> Albums</a>
+                <a href="{{ url_for("tracks") }}" class="{% if page == "tracks" %}active{% endif %}"><span class="icon">&#127908;</span> Tracks</a>
+                <a href="{{ url_for("releases") }}" class="{% if page == "releases" %}active{% endif %}"><span class="icon">&#128197;</span> Releases</a>
+            </div>
+
+            <!-- 📊 ANALYTICS -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">📊</span> Analytics</div>
+                <a href="{{ url_for("statistics") }}" class="{% if page == "statistics" %}active{% endif %}"><span class="icon">&#128200;</span> Statistics</a>
+                <a href="{{ url_for("spotify_stats") }}" class="{% if page == "spotify_stats" %}active{% endif %}"><span class="icon">&#63743;</span> Spotify Stats</a>
+                <a href="{{ url_for("growth_dashboard") }}" class="{% if page == "growth_dashboard" %}active{% endif %}"><span class="icon">&#128515;</span> Growth Dashboard</a>
+            </div>
+
+            <!-- 🤝 OUTREACH -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">🤝</span> Outreach</div>
+                <a href="{{ url_for("curators") }}" class="{% if page == "curators" %}active{% endif %}"><span class="icon">&#128101;</span> Playlist Curators</a>
+                <a href="{{ url_for("submissions") }}" class="{% if page == "submissions" %}active{% endif %}"><span class="icon">&#128240;</span> Submissions</a>
+                <a href="{{ url_for("compose") }}" class="{% if page == "compose" %}active{% endif %}"><span class="icon">&#9993;</span> Pitch Composer</a>
+                <a href="{{ url_for("templates") }}" class="{% if page == "templates" %}active{% endif %}"><span class="icon">&#128221;</span> Email Templates</a>
+            </div>
+
+            <!-- 📬 OUTREACH AUTOMATION -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">📬</span> Outreach Automation</div>
+                <a href="{{ url_for("outreach_dashboard") }}" class="{% if page == "outreach_dashboard" %}active{% endif %}"><span class="icon">&#128200;</span> Outreach Dashboard</a>
+                <a href="{{ url_for("outreach_campaigns") }}" class="{% if page == "outreach_campaigns" %}active{% endif %}"><span class="icon">&#128227;</span> Campaigns</a>
+                <a href="{{ url_for("outreach_new_campaign") }}" class="{% if page == "outreach_new_campaign" %}active{% endif %}"><span class="icon">&#10010;</span> New Campaign</a>
+                <a href="{{ url_for("outreach_follow_ups") }}" class="{% if page == "outreach_follow_ups" %}active{% endif %}"><span class="icon">&#128260;</span> Follow-Ups</a>
+                <a href="{{ url_for("curators") }}" class="{% if page == "curators" %}active{% endif %}"><span class="icon">&#128101;</span> Curator Database</a>
+            </div>
+
+            <!-- 🎬 CONTENT -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">🎬</span> Content</div>
+                <a href="{{ url_for("content_creator") }}" class="{% if page == "content_creator" %}active{% endif %}"><span class="icon">&#127916;</span> Content Creator</a>
+                <a href="{{ url_for("upload_post") }}" class="{% if page == "upload_post" %}active{% endif %}"><span class="icon">&#128228;</span> Upload Post</a>
+                <a href="{{ url_for("media_library") }}" class="{% if page == "media_library" %}active{% endif %}"><span class="icon">&#128193;</span> Media Library</a>
+                <a href="{{ url_for("post_scheduler") }}" class="{% if page == "post_scheduler" %}active{% endif %}"><span class="icon">&#128197;</span> Post Scheduler</a>
+                <a href="{{ url_for("publora") }}" class="{% if page == "publora" %}active{% endif %}"><span class="icon">&#128640;</span> Publora Post</a>
+                <a href="{{ url_for("social_profiles") }}" class="{% if page == "social_profiles" %}active{% endif %}"><span class="icon">&#127760;</span> Social Profiles</a>
+                <a href="{{ url_for("vocal_separator") }}" class="{% if page == "vocal_separator" %}active{% endif %}"><span class="icon">&#127920;</span> Vocal Separator</a>
+            </div>
+
+            <!-- 📱 AUTOMATION -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">📱</span> Automation</div>
+                <a href="{{ url_for("streaming_accounts") }}" class="{% if page == "streaming_accounts" %}active{% endif %}"><span class="icon">&#128274;</span> Streaming Accounts</a>
+                <a href="{{ url_for("streaming_automation") }}" class="{% if page == "streaming_automation" %}active{% endif %}"><span class="icon">&#9654;</span> Streaming Automation</a>
+                <a href="{{ url_for("emulators") }}" class="{% if page == "emulators" %}active{% endif %}"><span class="icon">&#127919;</span> Emulators</a>
+                <a href="{{ url_for("live_monitor") }}" class="{% if page == "live_monitor" %}active{% endif %}"><span class="icon">&#128241;</span> Live Monitor</a>
+                <a href="{{ url_for("cloud_phones_page") }}" class="{% if page == "cloud-phones" %}active{% endif %}"><span class="icon">&#128241;</span> Cloud Phones</a>
+            </div>
+
+            <!-- ⚙️ SETTINGS -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">⚙️</span> Settings</div>
+                <a href="{{ url_for("email_accounts") }}" class="{% if page == "email_accounts" %}active{% endif %}"><span class="icon">&#128231;</span> Email Accounts</a>
+                <a href="{{ url_for("proxies") }}" class="{% if page == "proxies" %}active{% endif %}"><span class="icon">&#127463;</span> Proxy Manager</a>
+                <a href="{{ url_for("account_creator") }}" class="{% if page == "account_creator" %}active{% endif %}"><span class="icon">&#128272;</span> Account Creator</a>
+                <a href="{{ url_for("anti_detect") }}" class="{% if page == "anti_detect" %}active{% endif %}"><span class="icon">&#128737;</span> Anti-Detect Profiles</a>
+                <a href="{{ url_for("scheduler") }}" class="{% if page == "scheduler" %}active{% endif %}"><span class="icon">&#9201;</span> Task Scheduler</a>
+                <a href="{{ url_for("profile") }}" class="{% if page == "profile" %}active{% endif %}"><span class="icon">&#128100;</span> My Profile</a>
+            </div>
+
+            <!-- 🎯 CAMPAIGNS -->
+            <div class="sidebar-group">
+                <div class="sidebar-group-header"><span class="emoji">🎯</span> Campaigns</div>
+                <a href="{{ url_for("campaigns") }}" class="{% if page == "campaigns" %}active{% endif %}"><span class="icon">&#127912;</span> Campaigns</a>
+                <a href="{{ url_for("ai_playlists") }}" class="{% if page == "ai_playlists" %}active{% endif %}"><span class="icon">&#129504;</span> AI Playlists</a>
+                <a href="{{ url_for("tiktok") }}" class="{% if page == "tiktok" %}active{% endif %}"><span class="icon">&#127926;</span> TikTok Bot</a>
+            </div>
+
+            <!-- Divider -->
+            <div class="sidebar-divider">
+                <a href="{{ url_for("export") }}"><span class="icon">&#128190;</span> Backup Data</a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">Memento Mori<br>Vol. 1 &middot; 2 &middot; 3</div>
+    </aside>
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div style="padding: 18px 30px 0;">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block topbar %}
+        <div class="topbar">
+            <h2>{% block page_title %}Marketing Manager{% endblock %}</h2>
+            <div>{% block topbar_actions %}{% endblock %}</div>
+        </div>
+        {% endblock %}
+
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {% block modals %}{% endblock %}
+
+    <script>
+        document.querySelectorAll(".flash").forEach(function(f) {
+            setTimeout(function() { f.style.opacity = "0"; f.style.transition = "opacity 0.5s"; }, 4000);
+            setTimeout(function() { if(f.parentNode) f.remove(); }, 4500);
+        });
+        function openModal(id) { document.getElementById(id).classList.add("active"); }
+        function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+        function confirmDelete(url) {
+            if (confirm("Delete this item? This cannot be undone.")) {
+                fetch(url, { method: "POST" }).then(function() { location.reload(); });
+            }
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

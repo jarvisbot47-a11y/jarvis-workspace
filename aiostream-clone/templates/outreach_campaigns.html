@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Outreach Campaigns - Marketing Manager{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1>📬 Outreach Campaigns</h1>
+        <p>Manage your playlist pitching campaigns</p>
+    </div>
+    <a href="{{ url_for('outreach_new_campaign') }}" class="btn btn-primary">
+        <span>+</span> New Campaign
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>All Campaigns</h2>
+        <a href="{{ url_for('outreach_dashboard') }}" class="btn btn-small">← Dashboard</a>
+    </div>
+    <div class="card-body">
+        {% if campaigns %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Campaign</th>
+                    <th>Track</th>
+                    <th>Status</th>
+                    <th>Curators</th>
+                    <th>Sent</th>
+                    <th>Responses</th>
+                    <th>Acceptances</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in campaigns %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ c.name }}</div>
+                        {% if c.genre_filter %}<div style="font-size: 11px; color: var(--text-dim);">{{ c.genre_filter }}</div>{% endif %}
+                        {% if c.tier_filter %}<div style="font-size: 11px; color: var(--text-dim);">Tier: {{ c.tier_filter }}</div>{% endif %}
+                    </td>
+                    <td>{% if c.track_title %}{{ c.track_title }}{% else %}—{% endif %}</td>
+                    <td>
+                        <span class="badge badge-{{ 'success' if c.status == 'sent' else 'default' }}">
+                            {{ c.status }}
+                        </span>
+                    </td>
+                    <td>{{ c.curators_contacted or 0 }}</td>
+                    <td>{{ c.emails_sent or 0 }}</td>
+                    <td>{{ c.responses_received or 0 }}</td>
+                    <td>
+                        {% if c.acceptances %}
+                        <span style="color: var(--success); font-weight: 600;">{{ c.acceptances }}</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td style="font-size: 12px; color: var(--text-dim);">{{ c.created_at[:10] }}</td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="{{ url_for('outreach_campaign_detail', campaign_id=c.id) }}" class="btn btn-small btn-secondary">View</a>
+                            {% if c.status == 'draft' %}
+                            <button class="btn btn-small btn-primary" onclick="sendCampaign({{ c.id }})">Send</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 64px; color: var(--text-dim);">
+            <div style="font-size: 48px; margin-bottom: 16px;">📬</div>
+            <h3 style="margin-bottom: 8px;">No campaigns yet</h3>
+            <p style="margin-bottom: 24px;">Create your first outreach campaign to start pitching to playlist curators.</p>
+            <a href="{{ url_for('outreach_new_campaign') }}" class="btn btn-primary">Create First Campaign</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+async function sendCampaign(campaignId) {
+    if (!confirm('Send this campaign? This will email all selected curators.')) return;
+    const btn = event.target;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    try {
+        const res = await fetch(`/outreach/campaign/${campaignId}/send`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Success! Sent to ${data.sent} curators.`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+            btn.textContent = 'Send';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        alert('Error: ' + e.message);
+        btn.textContent = 'Send';
+        btn.disabled = false;
+    }
+}
+</script>
+
+<style>
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-success { background: rgba(74, 222, 128, 0.15); color: var(--success); }
+.badge-default { background: var(--glass-bg); color: var(--text-dim); }
+.btn-small { padding: 6px 14px; font-size: 12px; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+.data-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+.data-table tbody tr:hover { background: var(--glass-bg-hover); }
+</style>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Outreach Dashboard - Marketing Manager{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1>📬 Outreach Dashboard</h1>
+        <p>Track your playlist pitching campaigns and curator outreach</p>
+    </div>
+    <a href="{{ url_for('outreach_new_campaign') }}" class="btn btn-primary">
+        <span>+</span> New Campaign
+    </a>
+</div>
+
+<!-- Quick Stats -->
+<div class="stats-grid" style="margin-bottom: 32px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #7c6aef, #ec6a88);">📧</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.overall.total_sent or 0 }}</div>
+            <div class="stat-label">Emails Sent</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);">👁</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.overall.total_opened or 0 }}</div>
+            <div class="stat-label">Opened</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">💬</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.overall.total_responded or 0 }}</div>
+            <div class="stat-label">Responses</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4ade80, #22c55e);">✅</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.overall.total_accepted or 0 }}</div>
+            <div class="stat-label">Acceptances</div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Rate -->
+<div class="card" style="margin-bottom: 32px;">
+    <div class="card-header">
+        <h2>Performance Metrics</h2>
+    </div>
+    <div class="card-body" style="display: flex; gap: 32px; flex-wrap: wrap;">
+        {% set sent = stats.overall.total_sent or 1 %}
+        {% set opened = stats.overall.total_opened or 0 %}
+        {% set responded = stats.overall.total_responded or 0 %}
+        {% set accepted = stats.overall.total_accepted or 0 %}
+        <div style="flex: 1; min-width: 150px;">
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Open Rate</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--info);">{{ "%.0f"|format((opened / sent) * 100) if sent > 0 else 0 }}%</div>
+            <div style="font-size: 12px; color: var(--text-muted);">{{ opened }} of {{ sent }} opened</div>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Response Rate</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--warning);">{{ "%.0f"|format((responded / sent) * 100) if sent > 0 else 0 }}%</div>
+            <div style="font-size: 12px; color: var(--text-muted);">{{ responded }} responses</div>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Acceptance Rate</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--success);">{{ "%.0f"|format((accepted / sent) * 100) if sent > 0 else 0 }}%</div>
+            <div style="font-size: 12px; color: var(--text-muted);">{{ accepted }} playlist adds</div>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Reject Rate</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--danger);">{{ "%.0f"|format(((stats.overall.total_rejected or 0) / sent) * 100) if sent > 0 else 0 }}%</div>
+            <div style="font-size: 12px; color: var(--text-muted);">{{ stats.overall.total_rejected or 0 }} rejections</div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <!-- Active Campaigns -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Active Campaigns</h2>
+            <a href="{{ url_for('outreach_campaigns') }}" class="btn btn-small">View All</a>
+        </div>
+        <div class="card-body">
+            {% if campaigns %}
+                {% for campaign in campaigns[:5] %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--glass-border);">
+                    <div>
+                        <div style="font-weight: 600;">{{ campaign.name }}</div>
+                        <div style="font-size: 12px; color: var(--text-dim);">
+                            {% if campaign.track_title %}🎵 {{ campaign.track_title }}{% endif %}
+                            • {{ campaign.emails_sent or 0 }} sent
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="badge badge-{{ 'success' if campaign.status == 'sent' else 'default' }}">
+                            {{ campaign.status }}
+                        </span>
+                        {% if campaign.acceptances %}
+                        <div style="font-size: 11px; color: var(--success);">✅ {{ campaign.acceptances }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 32px; color: var(--text-dim);">
+                    <div style="font-size: 32px; margin-bottom: 12px;">📬</div>
+                    <div>No campaigns yet</div>
+                    <a href="{{ url_for('outreach_new_campaign') }}" class="btn btn-primary btn-small" style="margin-top: 12px;">Create First Campaign</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Responses -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Recent Responses</h2>
+        </div>
+        <div class="card-body">
+            {% if stats.recent_responses %}
+                {% for resp in stats.recent_responses %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--glass-border);">
+                    <div>
+                        <div style="font-weight: 600;">{{ resp.curator_name }}</div>
+                        <div style="font-size: 12px; color: var(--text-dim);">{{ resp.playlist_name }}</div>
+                    </div>
+                    <span class="badge badge-{{ 'success' if resp.response_status == 'accepted' else 'danger' if resp.response_status == 'rejected' else 'warning' }}">
+                        {{ resp.response_status }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 32px; color: var(--text-dim);">
+                    <div style="font-size: 32px; margin-bottom: 12px;">💬</div>
+                    <div>No responses yet</div>
+                    <div style="font-size: 12px; margin-top: 8px;">Responses will appear here as curators reply</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Top Performing Templates -->
+{% if stats.by_template %}
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h2>Best Performing Templates</h2>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+            {% for t in stats.by_template[:4] %}
+            <div style="flex: 1; min-width: 200px; padding: 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                <div style="font-weight: 600; margin-bottom: 8px;">{{ t.template_name }}</div>
+                <div style="display: flex; gap: 16px; font-size: 13px;">
+                    <div>
+                        <span style="color: var(--text-dim);">Sent</span>
+                        <span style="font-weight: 600;">{{ t.sent }}</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-dim);">Resp</span>
+                        <span style="font-weight: 600; color: var(--warning);">{{ t.responded }}</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-dim);">Acc</span>
+                        <span style="font-weight: 600; color: var(--success);">{{ t.accepted }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h2>Quick Actions</h2>
+    </div>
+    <div class="card-body" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="{{ url_for('outreach_new_campaign') }}" class="btn btn-primary">+ New Campaign</a>
+        <a href="{{ url_for('outreach_follow_ups') }}" class="btn btn-secondary">📬 Follow-Up Queue</a>
+        <a href="{{ url_for('curators') }}" class="btn btn-secondary">🎯 View Curators</a>
+        <a href="{{ url_for('templates') }}" class="btn btn-secondary">📝 Edit Templates</a>
+    </div>
+</div>
+
+<style>
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; }
+.stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.stat-value { font-size: 24px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-success { background: rgba(74, 222, 128, 0.15); color: var(--success); }
+.badge-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+.badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.badge-default { background: var(--glass-bg); color: var(--text-dim); }
+.btn-small { padding: 6px 14px; font-size: 12px; }
+@media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+{% endblock %}

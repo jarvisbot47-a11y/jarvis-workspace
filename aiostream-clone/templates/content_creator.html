@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Content Creator - Marketing Manager{% endblock %}
+{% block page_title %}Content Creator{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;">
+    <button class="btn btn-secondary" onclick="openModal('modal-new-project')">+ New Project</button>
+    <a href="{{ url_for('upload_post') }}" class="btn btn-primary" style="background:var(--accent);box-shadow:0 4px 20px var(--accent-glow);">📤 Send to Upload Post</a>
+    <a href="{{ url_for('vocal_separator') }}" class="btn btn-primary" style="background:linear-gradient(135deg,#7c6aef,#ec6a88);box-shadow:0 4px 20px var(--accent-glow);">🎛 Extract Vocals</a>
+    <a href="{{ url_for('seedance') }}" class="btn btn-primary" style="background:linear-gradient(135deg,#ef6a8c,#f0c040);box-shadow:0 4px 20px rgba(236,106,140,0.3);">🎬 Generate with Seedance</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label">AI Videos</div>
+        <div class="stat-value" style="color:var(--accent);">{{ stats.projects }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Queued</div>
+        <div class="stat-value" style="color:var(--warning);">{{ stats.queued }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Exported</div>
+        <div class="stat-value" style="color:var(--success);">{{ stats.exported }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Error</div>
+        <div class="stat-value" style="color:var(--danger);">{{ stats.errors }}</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Project List -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Projects</h3>
+        </div>
+        {% if projects %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Platforms</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in projects %}
+                    <tr>
+                        <td>
+                            <strong>{{ p.name }}</strong><br>
+                            <span style="font-size:11px;color:var(--text-dim);">{{ p.id }}</span>
+                        </td>
+                        <td>
+                            {% if p.status == 'draft' %}
+                            <span class="badge badge-pending">Draft</span>
+                            {% elif p.status == 'processing' %}
+                            <span class="badge badge-noresponse">Processing</span>
+                            {% elif p.status == 'completed' %}
+                            <span class="badge badge-active">Done</span>
+                            {% else %}
+                            <span class="badge badge-{{ p.status }}">{{ p.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.settings %}
+                            {% set s = p.settings %}
+                            {% if s.platforms %}{{ s.platforms | join(', ') }}{% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="openProject('{{ p.id }}')">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="confirmDelete('/content-project/{{ p.id }}/delete')">Del</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color:var(--text-dim);padding:20px;text-align:center;">No projects yet. Create one to get started.</p>
+        {% endif %}
+    </div>
+
+    <!-- AI Generation Panel -->
+    <div class="card">
+        <div class="card-header">
+            <h3>AI Video Generation</h3>
+        </div>
+        <div class="form-group">
+            <label>Higgsfield API Key</label>
+            <input type="password" class="form-control" id="hf-api-key" placeholder="sk-..." value="{{ hf_api_key or '' }}">
+            <small style="color:var(--text-dim);font-size:11px;">Stored in environment: HIGGSFIELD_API_KEY</small>
+        </div>
+
+        <div class="form-group">
+            <label>Generation Mode</label>
+            <div style="display:flex;gap:15px;margin-top:5px;">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                    <input type="radio" name="gen-mode" value="browser" checked> Browser (Playwright)
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                    <input type="radio" name="gen-mode" value="api"> API
+                </label>
+            </div>
+            <small style="color:var(--text-dim);font-size:11px;">Browser mode uses Playwright to control Higgsfield web UI</small>
+        </div>
+
+        <div class="form-group">
+            <label>Duration</label>
+            <select class="form-control" id="hf-duration">
+                <option value="5" selected>5 seconds</option>
+                <option value="10">10 seconds</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Prompt</label>
+            <textarea class="form-control" id="hf-prompt" rows="3" placeholder="Cinematic music video shot, dark atmosphere, neon lighting..."></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Source Image</label>
+                <input type="file" class="form-control" id="hf-image" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>Quality</label>
+                <select class="form-control" id="hf-quality">
+                    <option value="draft">Draft (480p)</option>
+                    <option value="standard" selected>Standard (720p)</option>
+                    <option value="hd">HD (1080p)</option>
+                    <option value="4k">4K</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Target Platforms</label>
+            <div style="display:flex;gap:15px;margin-top:5px;">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                    <input type="checkbox" value="instagram" class="platform-check"> Instagram
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                    <input type="checkbox" value="tiktok" class="platform-check" checked> TikTok
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                    <input type="checkbox" value="youtube" class="platform-check"> YouTube
+                </label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                    <input type="checkbox" value="facebook" class="platform-check"> Facebook
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Color Grade</label>
+            <select class="form-control" id="color-grade">
+                <option value="cinematic">Cinematic</option>
+                <option value="teal_orange">Teal &amp; Orange (Hollywood)</option>
+                <option value="warm_vintage">Warm Vintage</option>
+                <option value="cool_modern">Cool Modern</option>
+                <option value="high_contrast">High Contrast</option>
+                <option value="none">None</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="add-captions" checked> Auto-captions (Whisper)
+            </label>
+        </div>
+
+        <button class="btn btn-primary" onclick="generateVideo()" id="btn-generate">
+            &#127916; Generate AI Video
+        </button>
+
+        <div id="generation-status" style="margin-top:15px;display:none;" class="card" style="padding:15px;">
+            <h4 style="margin-bottom:10px;">Generation Progress</h4>
+            <div id="gen-log" style="font-family:monospace;font-size:12px;color:var(--text-dim);"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Video Preview -->
+<div class="card" id="video-preview-card" style="display:none;">
+    <div class="card-header">
+        <h3>Generated Videos</h3>
+    </div>
+    <div id="video-outputs" class="grid-3"></div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- New Project Modal -->
+<div class="modal-overlay" id="modal-new-project">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>New Content Project</h3>
+            <button class="modal-close" onclick="closeModal('modal-new-project')">&times;</button>
+        </div>
+        <form action="/content-project/create" method="POST">
+            <div class="form-group">
+                <label>Project Name</label>
+                <input type="text" name="name" class="form-control" required placeholder="Mystik - New Single Promo">
+            </div>
+            <div class="form-group">
+                <label>Campaign</label>
+                <select name="campaign_id" class="form-control">
+                    <option value="">-- No Campaign --</option>
+                    {% for c in campaigns %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quality</label>
+                    <select name="quality" class="form-control">
+                        <option value="high" selected>High</option>
+                        <option value="standard">Standard</option>
+                        <option value="draft">Draft</option>
+                        <option value="ultra">Ultra</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Aspect Ratio</label>
+                    <select name="aspect_ratio" class="form-control">
+                        <option value="9:16" selected>9:16 Vertical (TikTok/Reels)</option>
+                        <option value="16:9">16:9 Horizontal (YouTube)</option>
+                        <option value="1:1">1:1 Square (Instagram)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Target Platforms</label>
+                <div style="display:flex;gap:15px;margin-top:5px;">
+                    <label><input type="checkbox" name="platforms" value="instagram" checked> Instagram</label>
+                    <label><input type="checkbox" name="platforms" value="tiktok" checked> TikTok</label>
+                    <label><input type="checkbox" name="platforms" value="youtube"> YouTube</label>
+                    <label><input type="checkbox" name="platforms" value="facebook"> Facebook</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Color Grade</label>
+                <select name="color_grade" class="form-control">
+                    <option value="cinematic" selected>Cinematic</option>
+                    <option value="teal_orange">Teal &amp; Orange</option>
+                    <option value="warm_vintage">Warm Vintage</option>
+                    <option value="cool_modern">Cool Modern</option>
+                    <option value="none">None</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-project')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function generateVideo() {
+    const btn = document.getElementById('btn-generate');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+
+    const statusDiv = document.getElementById('generation-status');
+    const logDiv = document.getElementById('gen-log');
+    statusDiv.style.display = 'block';
+    logDiv.innerHTML = '';
+
+    const genMode = document.querySelector('input[name="gen-mode"]:checked').value;
+    const platforms = [...document.querySelectorAll('.platform-check:checked')].map(c => c.value);
+    const payload = {
+        prompt: document.getElementById('hf-prompt').value,
+        quality: document.getElementById('hf-quality').value,
+        duration: parseInt(document.getElementById('hf-duration').value),
+        platforms: platforms,
+        color_grade: document.getElementById('color-grade').value,
+        add_captions: document.getElementById('add-captions').checked,
+        use_browser: genMode === 'browser',
+    };
+
+    try {
+        if (genMode === 'browser') {
+            // Use streaming SSE endpoint for browser-based generation
+            logDiv.innerHTML += `<span style="color:var(--info);">🌐 Starting browser automation...</span>\n`;
+            
+            const resp = await fetch('/api/content/generate/browser', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const lines = decoder.decode(value).split('\n');
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            if (data.status === 'info') {
+                                logDiv.innerHTML += `<span style="color:var(--text-dim);">• ${data.message}</span>\n`;
+                            } else if (data.status === 'success') {
+                                logDiv.innerHTML += `<span style="color:var(--success);">✓ ${data.message}</span>\n`;
+                            } else if (data.status === 'error') {
+                                logDiv.innerHTML += `<span style="color:var(--danger);">✗ ${data.message || data.error}</span>\n`;
+                            } else if (data.status === 'complete') {
+                                if (data.video_path) {
+                                    showVideoPreview(data.video_path);
+                                }
+                            }
+                            // Auto-scroll log
+                            logDiv.scrollTop = logDiv.scrollHeight;
+                        } catch(e) {}
+                    }
+                }
+            }
+        } else {
+            // API mode
+            const resp = await fetch('/api/content/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const result = await resp.json();
+
+            if (result.success) {
+                logDiv.innerHTML += `<span style="color:var(--success);">✓ ${result.message}</span>\n`;
+                if (result.video_path) {
+                    showVideoPreview(result.video_path);
+                }
+            } else {
+                logDiv.innerHTML += `<span style="color:var(--danger);">✗ ${result.error}</span>\n`;
+            }
+        }
+    } catch(e) {
+        logDiv.innerHTML += `<span style="color:var(--danger);">Error: ${e}</span>\n`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🎬 Generate AI Video';
+}
+
+function showVideoPreview(videoPath) {
+    const previewCard = document.getElementById('video-preview-card');
+    const container = document.getElementById('video-outputs');
+    previewCard.style.display = 'block';
+    
+    // Add to container
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cssText = 'padding:15px;';
+    div.innerHTML = `
+        <h4 style="margin-bottom:10px;">Generated Video</h4>
+        <video width="100%" controls style="border-radius:8px;">
+            <source src="${videoPath}" type="video/mp4">
+        </video>
+        <div style="margin-top:10px;display:flex;gap:8px;">
+            <a href="${videoPath}" class="btn btn-sm btn-secondary" download>Download</a>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function showOutputs(outputs) {
+    const previewCard = document.getElementById('video-preview-card');
+    const container = document.getElementById('video-outputs');
+    previewCard.style.display = 'block';
+    container.innerHTML = '';
+
+    for (const [platform, path] of Object.entries(outputs)) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.cssText = 'padding:15px;';
+        div.innerHTML = `
+            <h4 style="text-transform:capitalize;margin-bottom:10px;">${platform}</h4>
+            <video width="100%" controls style="border-radius:8px;">
+                <source src="${path}" type="video/mp4">
+            </video>
+            <div style="margin-top:10px;display:flex;gap:8px;">
+                <a href="${path}" class="btn btn-sm btn-secondary" download>Download</a>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+}
+
+function openProject(id) {
+    window.location.href = '/content-project/' + id;
+}
+</script>
+{% endblock %}

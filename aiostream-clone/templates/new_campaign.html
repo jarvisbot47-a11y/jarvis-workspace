@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}New Campaign - Outreach{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1>📬 New Campaign</h1>
+        <p>Create a new playlist pitching campaign</p>
+    </div>
+    <a href="{{ url_for('outreach_campaigns') }}" class="btn btn-secondary">← Back</a>
+</div>
+
+<form method="POST" id="campaignForm">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- Campaign Details -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Campaign Details</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Campaign Name *</label>
+                    <input type="text" name="name" class="form-input" placeholder="e.g., Mystik - New Single Pitching" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Track *</label>
+                    <select name="track_id" class="form-input" required>
+                        <option value="">Choose a track...</option>
+                        {% for track in tracks %}
+                        <option value="{{ track.id }}">{{ track.title }}{% if track.album_id %} ({{ albums|selectattr('id','equalto',track.album_id)|map(attribute='title')|first }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Spotify Link</label>
+                    <input type="url" name="spotify_link" class="form-input" placeholder="https://open.spotify.com/track/...">
+                </div>
+
+                <div class="form-group">
+                    <label>Apple Music Link</label>
+                    <input type="url" name="apple_link" class="form-input" placeholder="https://music.apple.com/...">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="notes" class="form-input" rows="3" placeholder="Any notes about this campaign..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Curator Selection -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🎯 Curator Selection</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Genre Filter</label>
+                    <select name="genre_filter" class="form-input">
+                        <option value="">All Genres</option>
+                        <option value="Underground Hip-Hop">Underground Hip-Hop</option>
+                        <option value="Boom Bap">Boom Bap</option>
+                        <option value="Psychedelic Hip-Hop">Psychedelic Hip-Hop</option>
+                        <option value="Conscious Rap">Conscious Rap</option>
+                        <option value="Lo-fi Hip Hop">Lo-fi Hip Hop</option>
+                        <option value="Trap">Trap</option>
+                        <option value="Cloud Rap">Cloud Rap</option>
+                        <option value="East Coast Hip-Hop">East Coast Hip-Hop</option>
+                        <option value="West Coast Hip-Hop">West Coast Hip-Hop</option>
+                        <option value="Alternative Hip-Hop">Alternative Hip-Hop</option>
+                        <option value="Hip Hop">Hip Hop (General)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tier Filter</label>
+                    <select name="tier_filter" class="form-input">
+                        <option value="">All Tiers</option>
+                        <option value="S">S-Tier (100K+ followers, highest priority)</option>
+                        <option value="A">A-Tier (30K-100K followers)</option>
+                        <option value="B">B-Tier (10K-30K followers)</option>
+                        <option value="C">C-Tier (SubmitHub required)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Min Followers</label>
+                    <input type="number" name="min_followers" class="form-input" placeholder="e.g., 10000">
+                </div>
+
+                <div class="form-group">
+                    <label>Max Followers</label>
+                    <input type="number" name="max_followers" class="form-input" placeholder="e.g., 500000">
+                </div>
+
+                <div class="form-tip" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; font-size: 12px; color: var(--text-dim);">
+                    <strong>💡 Tip:</strong> Leave filters empty to target all curators. Filters narrow down the curator list automatically.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Template -->
+    <div class="card" style="margin-top: 24px;">
+        <div class="card-header">
+            <h2>📧 Email Template</h2>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Select Template</label>
+                <select name="template_id" class="form-input" id="templateSelect" onchange="previewTemplate()">
+                    <option value="">Choose a template...</option>
+                    {% for t in templates %}
+                    <option value="{{ t.id }}" data-category="{{ t.category }}">{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="templatePreview" style="display: none; margin-top: 16px; padding: 16px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">
+                <h4 style="margin-bottom: 8px; font-size: 13px; color: var(--text-dim);">Template Variables</h4>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{curator_name}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{playlist_name}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{track_title}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{artist_name}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{track_link}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{genre}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{description}</code>
+                    <code style="background: rgba(124,106,239,0.15); padding: 2px 8px; border-radius: 4px; font-size: 12px; color: var(--accent);">{curator_vibe}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div style="margin-top: 24px; display: flex; gap: 12px;">
+        <button type="submit" class="btn btn-primary btn-large">Create Campaign</button>
+        <a href="{{ url_for('outreach_campaigns') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+<script>
+function previewTemplate() {
+    const select = document.getElementById('templateSelect');
+    const preview = document.getElementById('templatePreview');
+    if (select.value) {
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-dim); }
+.form-input { width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 14px; }
+.form-input:focus { outline: none; border-color: var(--accent); }
+textarea.form-input { resize: vertical; }
+select.form-input { cursor: pointer; }
+.btn-large { padding: 12px 28px; font-size: 15px; }
+</style>
+{% endblock %}

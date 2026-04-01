@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Aliases for {{ account.email_address }} - Promotion HQ{% endblock %}
+{% block page_title %}Email Aliases{% endblock %}
+
+{% block topbar_actions %}
+<div style="display: flex; gap: 8px;">
+    <a href="{{ url_for('email_accounts') }}" class="btn btn-secondary">← Back to Accounts</a>
+    <button onclick="openModal('add-alias')" class="btn btn-primary">+ Add Alias</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3>{{ account.display_name }} &lt;{{ account.email_address }}&gt;</h3>
+        <span class="badge badge-{{ account.status }}">{{ account.status }}</span>
+    </div>
+    <p style="font-size: 13px; color: var(--text-dim);">
+        Email aliases let you send from different sender names without creating new accounts.
+        Useful for targeting different genres or curator types with personalized sender names.
+    </p>
+</div>
+
+{% if aliases %}
+<div class="card">
+    <div class="card-header">
+        <h3>Configured Aliases</h3>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Alias Address</th>
+                    <th>Display Name</th>
+                    <th>Default</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alias in aliases %}
+                <tr>
+                    <td style="font-family: monospace;">{{ alias.alias_address }}</td>
+                    <td>{{ alias.display_name or '—' }}</td>
+                    <td>{% if alias.is_default %}✅ Default{% else %}—{% endif %}</td>
+                    <td>
+                        <form action="{{ url_for('alias_delete', alias_id=alias.id) }}" method="post" style="display: inline;">
+                            <button type="button" onclick="confirmDelete(this.form.action)" class="btn btn-danger btn-xs">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">🔗</div>
+    <h3>No aliases yet</h3>
+    <p>Add aliases to send from different sender names while using this account.</p>
+    <button onclick="openModal('add-alias')" class="btn btn-primary">Add First Alias</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="add-alias">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Alias for {{ account.email_address }}</h3>
+            <button class="modal-close" onclick="closeModal('add-alias')">&times;</button>
+        </div>
+        <form action="{{ url_for('alias_add', account_id=account.id) }}" method="post">
+            <div class="form-group">
+                <label>Alias Address</label>
+                <input type="email" name="alias_address" class="form-control" required placeholder="e.g. booking@mystik.com">
+                <p style="font-size: 12px; color: var(--text-dim); margin-top: 6px;">
+                    For Google Workspace: add the alias in Google Admin first, then it will work here.
+                </p>
+            </div>
+            <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" name="display_name" class="form-control" placeholder="e.g. Mystik Singh Music">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_default" value="1" style="margin-right: 8px;">
+                    Set as default sender name for this account
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Alias</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

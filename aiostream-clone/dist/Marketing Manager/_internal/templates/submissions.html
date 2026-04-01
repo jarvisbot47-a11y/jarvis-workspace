@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Submissions - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Submissions{% endblock %}
+
+{% block topbar_actions %}
+<button onclick="openModal('add-submission')" class="btn btn-primary">+ Log Submission</button>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="filters-bar">
+    <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+        <select name="status" class="form-control" style="width: auto;" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="pending" {% if filters.get('status')=='pending' %}selected{% endif %}>Pending</option>
+            <option value="approved" {% if filters.get('status')=='approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if filters.get('status')=='rejected' %}selected{% endif %}>Rejected</option>
+            <option value="no_response" {% if filters.get('status')=='no_response' %}selected{% endif %}>No Response</option>
+        </select>
+        <select name="album_id" class="form-control" style="width: auto;" onchange="this.form.submit()">
+            <option value="">All Albums</option>
+            <option value="1" {% if filters.get('album_id')==1 %}selected{% endif %}>Memento Mori Vol. 1</option>
+            <option value="2" {% if filters.get('album_id')==2 %}selected{% endif %}>Memento Mori Vol. 2</option>
+            <option value="3" {% if filters.get('album_id')==3 %}selected{% endif %}>Memento Mori Vol. 3</option>
+        </select>
+        <a href="{{ url_for('submissions') }}" class="btn btn-secondary btn-sm">Clear</a>
+    </form>
+    <span style="margin-left: auto; color: var(--text-dim); font-size: 13px;">{{ submissions|length }} submissions</span>
+</div>
+
+{% if submissions %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Curator</th>
+                <th>Playlist</th>
+                <th>Track / Album</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Email</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sub in submissions %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('curator_detail', curator_id=sub.curator_id) }}" style="color: var(--text); font-weight: 600;">{{ sub.curator_name }}</a>
+                </td>
+                <td style="color: var(--accent); font-size: 12px;">{{ sub.playlist_name or '—' }}</td>
+                <td>{{ sub.track_title or sub.album_title or '—' }}</td>
+                <td>
+                    <form action="{{ url_for('submission_update', sub_id=sub.id) }}" method="post" style="display: inline;">
+                        <select name="status" class="form-control" style="width: auto; padding: 4px 8px; font-size: 11px; background: var(--bg-dark);" onchange="this.form.submit()">
+                            <option value="pending" {% if sub.status=='pending' %}selected{% endif %}>Pending</option>
+                            <option value="approved" {% if sub.status=='approved' %}selected{% endif %}>Approved</option>
+                            <option value="rejected" {% if sub.status=='rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="no_response" {% if sub.status=='no_response' %}selected{% endif %}>No Response</option>
+                        </select>
+                        <input type="hidden" name="notes" value="{{ sub.notes or '' }}">
+                    </form>
+                </td>
+                <td>
+                    {% if sub.priority == 'high' %}
+                    <span style="color: var(--danger); font-size: 11px; font-weight: 700;">HIGH</span>
+                    {% else %}
+                    <span style="color: var(--text-dim); font-size: 11px;">Normal</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if sub.email_sent %}
+                    <span style="color: var(--success);">✅</span>
+                    {% else %}
+                    <span style="color: var(--text-dim);">❌</span>
+                    {% endif %}
+                </td>
+                <td style="color: var(--text-dim); font-size: 12px;">{{ sub.created_at[:10] }}</td>
+                <td>
+                    <div style="display: flex; gap: 6px;">
+                        <a href="{{ url_for('compose') }}?curator={{ sub.curator_id }}" class="btn btn-secondary btn-xs">Pitch</a>
+                        <form action="{{ url_for('submission_delete', sub_id=sub.id) }}" method="post" style="display: inline;">
+                            <button type="button" onclick="confirmDelete(this.form.action)" class="btn btn-danger btn-xs">✕</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="icon">📨</div>
+    <h3>No submissions found</h3>
+    <p>Log your first playlist pitch submission to start tracking your campaign.</p>
+    <button onclick="openModal('add-submission')" class="btn btn-primary">Log First Submission</button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="add-submission">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Log New Submission</h3>
+            <button class="modal-close" onclick="closeModal('add-submission')">&times;</button>
+        </div>
+        <form action="{{ url_for('submission_add') }}" method="post">
+            <div class="form-group">
+                <label>Curator *</label>
+                <select name="curator_id" class="form-control" required>
+                    <option value="">Select a curator...</option>
+                    {% for c in curators %}
+                    <option value="{{ c.id }}">{{ c.name }} — {{ c.playlist_name }} ({{ c.platform }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Album</label>
+                    <select name="album_id" class="form-control">
+                        <option value="">—</option>
+                        <option value="1">Memento Mori Vol. 1</option>
+                        <option value="2">Memento Mori Vol. 2</option>
+                        <option value="3">Memento Mori Vol. 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select name="priority" class="form-control">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control" placeholder="Personalization notes, follow-up reminders, etc."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Log Submission</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,608 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Post - Marketing Manager{% endblock %}
+{% block page_title %}📤 Upload Post{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;align-items:center;">
+    {% if is_configured %}
+    <span style="font-size:11px;color:var(--success);">● API Connected</span>
+    {% else %}
+    <span style="font-size:11px;color:var(--warning);">● API Not Configured</span>
+    {% endif %}
+    <button class="btn btn-secondary" onclick="openModal('modal-api-key')">⚙️ API Settings</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+.upload-tabs { display:flex;gap:8px;margin-bottom:20px; }
+.upload-tab { padding:10px 20px;border-radius:12px;cursor:pointer;border:1px solid var(--glass-border);background:var(--glass-bg);font-size:12.5px;font-weight:500;transition:all 0.2s; }
+.upload-tab:hover { background:var(--glass-bg-hover); }
+.upload-tab.active { background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow); }
+.platform-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:16px 0; }
+.platform-item { border:1px solid var(--glass-border);border-radius:14px;padding:14px 12px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--glass-bg); }
+.platform-item:hover { border-color:rgba(255,255,255,0.2);transform:translateY(-2px); }
+.platform-item.selected { border-color:var(--accent);background:rgba(124,106,239,0.15);box-shadow:0 0 16px var(--accent-glow); }
+.platform-item input[type=checkbox] { display:none; }
+.platform-item .p-icon { font-size:28px;margin-bottom:6px;display:block; }
+.platform-item .p-name { font-size:11px;font-weight:600;color:var(--text-dim); }
+.platform-item.selected .p-name { color:var(--text); }
+.input-url-wrap { display:none;margin:16px 0; }
+.input-url-wrap.active { display:block; }
+.toggle-row { display:flex;gap:12px;margin:12px 0; }
+.toggle-btn { flex:1;padding:12px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass-bg);cursor:pointer;text-align:center;transition:all 0.2s;font-size:12.5px;font-weight:500; }
+.toggle-btn:hover { background:var(--glass-bg-hover); }
+.toggle-btn.active { border-color:var(--accent);background:rgba(124,106,239,0.15);color:var(--accent); }
+.recent-table { width:100%;border-collapse:collapse; }
+.recent-table th { text-align:left;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);border-bottom:1px solid var(--glass-border); }
+.recent-table td { padding:12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12.5px; }
+.recent-table tr:hover td { background:var(--glass-bg-hover); }
+.platform-badge { display:inline-block;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:600;background:var(--glass-bg);border:1px solid var(--glass-border); }
+.status-success { color:var(--success); }
+.status-pending { color:var(--warning); }
+.status-error { color:var(--danger); }
+.analytics-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:16px; }
+.analytics-card { background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:20px; }
+.analytics-card .a-platform { font-size:12px;color:var(--text-dim);margin-bottom:8px; }
+.analytics-card .a-value { font-size:28px;font-weight:700;color:var(--text); }
+.analytics-card .a-label { font-size:10px;color:var(--text-muted);margin-top:4px; }
+.api-debug { background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:12px;padding:16px;margin-top:20px;font-family:monospace;font-size:11px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all;color:var(--text-dim);display:none; }
+.api-debug.visible { display:block; }
+</style>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="modal-api-key">
+    <div class="modal-content" style="max-width:480px;">
+        <h3>🔑 Upload-Post API Settings</h3>
+        <button class="modal-close" onclick="closeModal('modal-api-key')">×</button>
+        <form action="{{ url_for('upload_post_connect') }}" method="POST" style="margin-top:16px;">
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">API KEY</label>
+                <input type="password" name="api_key" value="{{ api_key }}" placeholder="Enter your upload-post.com API key" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">
+                Get your API key from <a href="https://upload-post.com" target="_blank" style="color:var(--accent);">upload-post.com</a> → Dashboard → API
+            </p>
+            {% if account_info and account_info.error %}
+            <div style="padding:10px;border-radius:10px;background:rgba(248,113,113,0.1);border:1px solid var(--danger);margin-bottom:16px;font-size:12px;color:var(--danger);">
+                ⚠️ {{ account_info.error }}
+            </div>
+            {% elif account_info and not account_info.error %}
+            <div style="padding:10px;border-radius:10px;background:rgba(74,222,128,0.1);border:1px solid var(--success);margin-bottom:16px;font-size:12px;color:var(--success);">
+                ✓ Connected! {{ account_info|tojson }}
+            </div>
+            {% endif %}
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-api-key')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save & Test</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if not is_configured %}
+<div class="card" style="border-color:var(--warning);background:rgba(251,191,36,0.05);">
+    <h3 style="color:var(--warning);">⚠️ Upload-Post API Not Configured</h3>
+    <p style="color:var(--text-dim);font-size:13px;margin:10px 0;">
+        To start posting to TikTok, Instagram, YouTube, and more, add your Upload-Post API key.
+    </p>
+    <ol style="color:var(--text-dim);font-size:12px;margin:12px 0 12px 20px;line-height:2;">
+        <li>Go to <a href="https://upload-post.com" target="_blank" style="color:var(--accent);">upload-post.com</a> and create an account</li>
+        <li>Get your API key from Dashboard → API</li>
+        <li>Click the <strong>⚙️ API Settings</strong> button above to enter your key</li>
+    </ol>
+</div>
+{% endif %}
+
+<!-- Upload Tabs -->
+<div class="upload-tabs">
+    <button class="upload-tab active" onclick="switchTab('upload')">📤 Upload Media</button>
+    <button class="upload-tab" onclick="switchTab('url')">🔗 Upload from URL</button>
+    <button class="upload-tab" onclick="switchTab('history')">📋 History</button>
+    <button class="upload-tab" onclick="switchTab('analytics')">📊 Analytics</button>
+</div>
+
+<!-- Upload by File Tab -->
+<div id="tab-upload" class="tab-content">
+    <form id="upload-form" enctype="multipart/form-data" onsubmit="submitUpload(event, 'file')">
+        <div class="card">
+            <div class="card-header">
+                <h3>📁 Select Media File</h3>
+            </div>
+            <div style="border:2px dashed var(--glass-border);border-radius:16px;padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;" 
+                 id="drop-zone" ondrop="handleDrop(event)" ondragover="event.preventDefault();this.style.borderColor='var(--accent)';"
+                 ondragleave="this.style.borderColor='var(--glass-border)';"
+                 onclick="document.getElementById('media_file').click()">
+                <div style="font-size:40px;margin-bottom:12px;">📤</div>
+                <p style="color:var(--text-dim);font-size:13px;">Drag & drop or click to select</p>
+                <p style="color:var(--text-muted);font-size:11px;margin-top:6px;">Video or image files supported</p>
+                <input type="file" id="media_file" name="media_file" accept="video/*,image/*" style="display:none;" onchange="fileSelected(this)" />
+            </div>
+            <div id="file-info" style="display:none;margin-top:12px;padding:12px;border-radius:10px;background:var(--glass-bg);border:1px solid var(--glass-border);font-size:12px;">
+                <span id="file-name"></span> — <span id="file-size"></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>🎯 Target Platforms</h3></div>
+            <div class="platform-grid">
+                {% set platforms = [
+                    ('tiktok','TikTok','🎵'),
+                    ('instagram','Instagram','📷'),
+                    ('youtube','YouTube','▶️'),
+                    ('facebook','Facebook','👥'),
+                    ('x','X / Twitter','✖'),
+                    ('linkedin','LinkedIn','💼'),
+                    ('threads','Threads','🧵'),
+                    ('pinterest','Pinterest','📌'),
+                    ('reddit','Reddit','🤖'),
+                    ('bluesky','Bluesky','🌀')
+                ] %}
+                {% for pid, pname, picon in platforms %}
+                <label class="platform-item" onclick="togglePlatform(this)">
+                    <input type="checkbox" name="platforms" value="{{ pid }}" />
+                    <span class="p-icon">{{ picon }}</span>
+                    <span class="p-name">{{ pname }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+                Select one or more platforms. Each platform requires connected credentials in your Upload-Post dashboard.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>✏️ Content</h3></div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">TITLE (optional)</label>
+                <input type="text" name="title" placeholder="Short title for the post..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">CAPTION</label>
+                <textarea name="caption" rows="4" placeholder="Write your caption..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+            <div>
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">DESCRIPTION (optional)</label>
+                <textarea name="description" rows="2" placeholder="Additional description..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>⏰ Schedule</h3></div>
+            <div class="toggle-row">
+                <div class="toggle-btn active" id="btn-post-now" onclick="setPostMode('now')" style="flex:1;">
+                    🚀 Post Now
+                </div>
+                <div class="toggle-btn" id="btn-post-schedule" onclick="setPostMode('schedule')" style="flex:1;">
+                    📅 Schedule
+                </div>
+            </div>
+            <input type="hidden" name="post_mode" id="post_mode" value="now" />
+            <div id="schedule-fields" style="display:none;margin-top:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">DATE</label>
+                        <input type="date" name="scheduled_date" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+                    </div>
+                    <div>
+                        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">TIME</label>
+                        <input type="time" name="scheduled_time_val" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+                    </div>
+                </div>
+                <div style="margin-top:12px;">
+                    <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">TIMEZONE</label>
+                    <select name="timezone" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;">
+                        <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+                        <option value="America/New_York">America/New_York (ET)</option>
+                        <option value="America/Chicago">America/Chicago (CT)</option>
+                        <option value="America/Denver">America/Denver (MT)</option>
+                        <option value="Europe/London">Europe/London (GMT)</option>
+                        <option value="Europe/Paris">Europe/Paris (CET)</option>
+                        <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                        <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+            <button type="button" class="btn btn-secondary" onclick="testConnection()">🧪 Test API</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit" style="font-size:14px;padding:12px 32px;">
+                🚀 <span id="submit-label">Post Now</span>
+            </button>
+        </div>
+
+        <div id="api-debug" class="api-debug"></div>
+    </form>
+</div>
+
+<!-- Upload by URL Tab -->
+<div id="tab-url" class="tab-content" style="display:none;">
+    <form id="upload-url-form" onsubmit="submitUpload(event, 'url')">
+        <div class="card">
+            <div class="card-header"><h3>🔗 Media URL</h3></div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">MEDIA URL</label>
+                <input type="url" name="media_url" id="media_url" placeholder="https://example.com/video.mp4 or https://example.com/image.jpg" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);">Paste a direct link to your video or image. Works great with Higgsfield-generated videos!</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>🎯 Target Platforms</h3></div>
+            <div class="platform-grid">
+                {% set platforms = [
+                    ('tiktok','TikTok','🎵'),
+                    ('instagram','Instagram','📷'),
+                    ('youtube','YouTube','▶️'),
+                    ('facebook','Facebook','👥'),
+                    ('x','X / Twitter','✖'),
+                    ('linkedin','LinkedIn','💼'),
+                    ('threads','Threads','🧵'),
+                    ('pinterest','Pinterest','📌'),
+                    ('reddit','Reddit','🤖'),
+                    ('bluesky','Bluesky','🌀')
+                ] %}
+                {% for pid, pname, picon in platforms %}
+                <label class="platform-item" onclick="togglePlatform(this)">
+                    <input type="checkbox" name="platforms" value="{{ pid }}" />
+                    <span class="p-icon">{{ picon }}</span>
+                    <span class="p-name">{{ pname }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>✏️ Content</h3></div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">TITLE (optional)</label>
+                <input type="text" name="title" placeholder="Short title..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">CAPTION</label>
+                <textarea name="caption" rows="4" placeholder="Write your caption..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+            <div>
+                <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">DESCRIPTION (optional)</label>
+                <textarea name="description" rows="2" placeholder="Additional description..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>⏰ Schedule</h3></div>
+            <div class="toggle-row">
+                <div class="toggle-btn active" id="btn-url-post-now" onclick="setPostMode('now')" style="flex:1;">🚀 Post Now</div>
+                <div class="toggle-btn" id="btn-url-post-schedule" onclick="setPostMode('schedule')" style="flex:1;">📅 Schedule</div>
+            </div>
+            <input type="hidden" name="post_mode" id="post_mode_url" value="now" />
+            <div id="schedule-fields-url" style="display:none;margin-top:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">DATE</label>
+                        <input type="date" name="scheduled_date" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+                    </div>
+                    <div>
+                        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">TIME</label>
+                        <input type="time" name="scheduled_time_val" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;" />
+                    </div>
+                </div>
+                <div style="margin-top:12px;">
+                    <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:6px;">TIMEZONE</label>
+                    <select name="timezone" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;">
+                        <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+                        <option value="America/New_York">America/New_York (ET)</option>
+                        <option value="Europe/London">Europe/London (GMT)</option>
+                        <option value="Europe/Paris">Europe/Paris (CET)</option>
+                        <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                        <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+            <button type="submit" class="btn btn-primary" id="btn-submit-url" style="font-size:14px;padding:12px 32px;">
+                🚀 <span id="submit-label-url">Post Now</span>
+            </button>
+        </div>
+
+        <div id="api-debug-url" class="api-debug"></div>
+    </form>
+</div>
+
+<!-- History Tab -->
+<div id="tab-history" class="tab-content" style="display:none;">
+    <div class="card">
+        <div class="card-header">
+            <h3>📋 Recent Uploads</h3>
+            <button class="btn btn-secondary" onclick="loadHistory()">🔄 Refresh</button>
+        </div>
+        {% if history %}
+        <table class="recent-table">
+            <thead>
+                <tr>
+                    <th>Platforms</th>
+                    <th>Caption</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in history %}
+                <tr>
+                    <td>
+                        {% for p in item.platforms %}
+                        <span class="platform-badge">{{ p }}</span>
+                        {% endfor %}
+                    </td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.caption or '—' }}</td>
+                    <td class="status-{{ item.status }}">{{ item.status }}</td>
+                    <td style="color:var(--text-dim);font-size:11px;">{{ item.date[:16] if item.date else '—' }}</td>
+                    <td style="font-size:11px;color:var(--text-dim);">
+                        {% if item.result and item.result.error %}
+                        <span style="color:var(--danger);">{{ item.result.error }}</span>
+                        {% elif item.result and item.result.id %}
+                        <span style="color:var(--success);">Job: {{ item.result.id }}</span>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color:var(--text-dim);font-size:13px;text-align:center;padding:40px;">No uploads yet. Start by uploading a file or URL above!</p>
+        {% endif %}
+    </div>
+
+    {% if scheduled %}
+    <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+            <h3>📅 Scheduled Posts</h3>
+        </div>
+        <table class="recent-table">
+            <thead>
+                <tr>
+                    <th>Platforms</th>
+                    <th>Caption</th>
+                    <th>Scheduled Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in scheduled %}
+                <tr>
+                    <td>{% for p in post.platform.split(',') %}<span class="platform-badge">{{ p.strip() }}</span>{% endfor %}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ post.content or '—' }}</td>
+                    <td style="color:var(--text-dim);font-size:11px;">{{ post.scheduled_time or '—' }}</td>
+                    <td class="status-{{ post.status }}">{{ post.status }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="cancelSchedule('{{ post.id }}')">Cancel</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Analytics Tab -->
+<div id="tab-analytics" class="tab-content" style="display:none;">
+    <div class="card">
+        <div class="card-header">
+            <h3>📊 Platform Analytics</h3>
+            <button class="btn btn-secondary" onclick="loadAnalytics()">🔄 Refresh</button>
+        </div>
+        <div id="analytics-content">
+            <div id="analytics-placeholder" style="text-align:center;padding:40px;color:var(--text-dim);">
+                <p>Click "Refresh" to load analytics from Upload-Post API</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.upload-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).style.display = 'block';
+    event.target.closest('.upload-tab').classList.add('active');
+    
+    if (tab === 'history') loadHistory();
+    if (tab === 'analytics') loadAnalytics();
+}
+
+// Platform selection
+function togglePlatform(el) {
+    el.classList.toggle('selected');
+    const cb = el.querySelector('input[type=checkbox]');
+    cb.checked = !cb.checked;
+}
+
+// File selection
+function fileSelected(input) {
+    const f = input.files[0];
+    if (f) {
+        document.getElementById('file-info').style.display = 'block';
+        document.getElementById('file-name').textContent = f.name;
+        document.getElementById('file-size').textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB';
+    }
+}
+
+// Drag and drop
+function handleDrop(e) {
+    e.preventDefault();
+    e.target.style.borderColor = 'var(--glass-border)';
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('media_file').files = files;
+        fileSelected(document.getElementById('media_file'));
+    }
+}
+
+// Post mode
+function setPostMode(mode) {
+    document.getElementById('post_mode').value = mode;
+    document.getElementById('post_mode_url').value = mode;
+    
+    if (mode === 'schedule') {
+        document.getElementById('btn-post-now').classList.remove('active');
+        document.getElementById('btn-post-schedule').classList.add('active');
+        document.getElementById('btn-url-post-now').classList.remove('active');
+        document.getElementById('btn-url-post-schedule').classList.add('active');
+        document.getElementById('schedule-fields').style.display = 'block';
+        document.getElementById('schedule-fields-url').style.display = 'block';
+        document.getElementById('submit-label').textContent = '📅 Schedule Post';
+        document.getElementById('submit-label-url').textContent = '📅 Schedule Post';
+    } else {
+        document.getElementById('btn-post-now').classList.add('active');
+        document.getElementById('btn-post-schedule').classList.remove('active');
+        document.getElementById('btn-url-post-now').classList.add('active');
+        document.getElementById('btn-url-post-schedule').classList.remove('active');
+        document.getElementById('schedule-fields').style.display = 'none';
+        document.getElementById('schedule-fields-url').style.display = 'none';
+        document.getElementById('submit-label').textContent = '🚀 Post Now';
+        document.getElementById('submit-label-url').textContent = '🚀 Post Now';
+    }
+}
+
+// Submit upload
+function submitUpload(e, type) {
+    e.preventDefault();
+    const form = type === 'file' ? document.getElementById('upload-form') : document.getElementById('upload-url-form');
+    const btn = type === 'file' ? document.getElementById('btn-submit') : document.getElementById('btn-submit-url');
+    const debug = type === 'file' ? document.getElementById('api-debug') : document.getElementById('api-debug-url');
+    
+    // Check platforms selected
+    const platforms = form.querySelectorAll('input[name=platforms]:checked');
+    if (platforms.length === 0) {
+        alert('Please select at least one platform!');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ Processing...';
+    debug.classList.remove('visible');
+    debug.textContent = '';
+    
+    const formData = new FormData(form);
+    const postMode = formData.get('post_mode');
+    
+    let url, fetchOptions;
+    if (type === 'file') {
+        url = '/content/upload-post/upload';
+        fetchOptions = { method: 'POST', body: formData };
+    } else {
+        url = '/content/upload-post/upload-url';
+        const data = {};
+        formData.forEach((v, k) => data[k] = v);
+        fetchOptions = { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) };
+    }
+    
+    fetch(url, fetchOptions)
+        .then(r => r.json())
+        .then(result => {
+            debug.classList.add('visible');
+            debug.textContent = JSON.stringify(result, null, 2);
+            
+            if (result.success || result.job_id || result.id) {
+                btn.textContent = '✓ Success!';
+                btn.style.background = 'var(--success)';
+                setTimeout(() => {
+                    btn.textContent = type === 'file' ? '🚀 Post Now' : '🚀 Post Now';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 3000);
+            } else {
+                btn.textContent = '✖ Failed';
+                btn.style.background = 'var(--danger)';
+                setTimeout(() => {
+                    btn.textContent = type === 'file' ? '🚀 Post Now' : '🚀 Post Now';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 3000);
+            }
+        })
+        .catch(err => {
+            debug.classList.add('visible');
+            debug.textContent = 'Error: ' + err;
+            btn.textContent = '✖ Error';
+            btn.disabled = false;
+        });
+}
+
+// Test connection
+function testConnection() {
+    fetch('/content/upload-post/me')
+        .then(r => r.json())
+        .then(result => {
+            const debug = document.getElementById('api-debug');
+            debug.classList.add('visible');
+            debug.textContent = JSON.stringify(result, null, 2);
+        })
+        .catch(err => {
+            const debug = document.getElementById('api-debug');
+            debug.classList.add('visible');
+            debug.textContent = 'Error: ' + err;
+        });
+}
+
+// Load history
+function loadHistory() {
+    fetch('/content/upload-post/history')
+        .then(r => r.json())
+        .then(data => {
+            console.log('History:', data);
+        })
+        .catch(err => console.error('History error:', err));
+}
+
+// Load analytics
+function loadAnalytics() {
+    fetch('/content/upload-post/analytics')
+        .then(r => r.json())
+        .then(result => {
+            const el = document.getElementById('analytics-content');
+            if (result.error) {
+                el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);"><p>Error: ${result.error}</p></div>`;
+            } else {
+                el.innerHTML = JSON.stringify(result, null, 2);
+            }
+        })
+        .catch(err => {
+            document.getElementById('analytics-content').innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);"><p>Error: ${err}</p></div>`;
+        });
+}
+
+// Cancel scheduled post
+function cancelSchedule(jobId) {
+    if (!confirm('Cancel this scheduled post?')) return;
+    fetch(`/content/upload-post/schedule/${jobId}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success || result.deleted) {
+                alert('Cancelled!');
+                loadHistory();
+            } else {
+                alert('Error: ' + (result.error || 'Failed'));
+            }
+        })
+        .catch(err => alert('Error: ' + err));
+}
+
+// Modal helpers
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+</script>
+{% endblock %}

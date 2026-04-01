@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Import Data - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Import Data{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <div class="card-header">
+        <h3>📂 Import Backup</h3>
+    </div>
+    <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6;">
+        Upload a previously exported JSON backup file to restore your data. This will replace all existing data.
+    </p>
+    <form action="{{ url_for('import_page') }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Backup File (JSON)</label>
+            <input type="file" name="file" accept=".json" class="form-control" required>
+        </div>
+        <div style="background: rgba(244, 67, 54, 0.1); border: 1px solid rgba(244, 67, 54, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <p style="font-size: 13px; color: var(--danger);">
+                ⚠️ <strong>Warning:</strong> Importing will replace all existing data. Export your current data first if you want to keep it.
+            </p>
+        </div>
+        <button type="submit" class="btn btn-danger" style="width: 100%;">Import Data</button>
+    </form>
+</div>
+{% endblock %}

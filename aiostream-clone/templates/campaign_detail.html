@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Campaign: {{ campaign.name }} - Outreach{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1>📬 {{ campaign.name }}</h1>
+        <p>
+            {% if campaign.track_title %}🎵 {{ campaign.track_title }}{% endif %}
+            • Status: <span class="badge badge-{{ 'success' if campaign.status == 'sent' else 'default' }}">{{ campaign.status }}</span>
+        </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        {% if campaign.status == 'draft' %}
+        <button class="btn btn-primary" onclick="sendCampaign()">🚀 Send Campaign</button>
+        {% endif %}
+        <a href="{{ url_for('outreach_campaigns') }}" class="btn btn-secondary">← Back</a>
+    </div>
+</div>
+
+<!-- Campaign Stats -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #7c6aef, #ec6a88);">🎯</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ campaign.curators_contacted or 0 }}</div>
+            <div class="stat-label">Curators Targeted</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);">📧</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ campaign.emails_sent or 0 }}</div>
+            <div class="stat-label">Emails Sent</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">💬</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ campaign.responses_received or 0 }}</div>
+            <div class="stat-label">Responses</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4ade80, #22c55e);">✅</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ campaign.acceptances or 0 }}</div>
+            <div class="stat-label">Acceptances</div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Emails Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Sent Emails</h2>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if emails %}
+            <table class="data-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Curator</th>
+                        <th>Playlist</th>
+                        <th>Template</th>
+                        <th>Sent</th>
+                        <th>Follow-up</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for email in emails %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">{{ email.curator_name }}</div>
+                        </td>
+                        <td>{{ email.playlist_name or '—' }}</td>
+                        <td>{{ email.template_name or '—' }}</td>
+                        <td style="font-size: 12px; color: var(--text-dim);">{{ email.sent_at[:16] if email.sent_at else '—' }}</td>
+                        <td>
+                            {% if email.follow_up_level == 0 %}Initial{% elif email.follow_up_level == 1 %}Follow-up 1{% elif email.follow_up_level == 2 %}Follow-up 2{% else %}Final{% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if email.response_status == 'accepted' else 'danger' if email.response_status == 'rejected' else 'warning' if email.response_status == 'responded' else 'default' }}">
+                                {{ email.response_status or 'pending' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 4px;">
+                                <select class="form-input-small" onchange="markResponse({{ email.id }}, this.value)" style="width: 100px; font-size: 11px; padding: 4px 8px;">
+                                    <option value="">Mark...</option>
+                                    <option value="responded">Responded</option>
+                                    <option value="accepted">Accepted ✅</option>
+                                    <option value="rejected">Rejected ❌</option>
+                                    <option value="no_response">No Response</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="text-align: center; padding: 48px; color: var(--text-dim);">
+                <div style="font-size: 40px; margin-bottom: 12px;">📧</div>
+                <div>No emails sent yet</div>
+                {% if campaign.status == 'draft' %}
+                <button class="btn btn-primary" onclick="sendCampaign()" style="margin-top: 16px;">Send Campaign Now</button>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Campaign Info -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Campaign Info</h2>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Status</div>
+                    <span class="badge badge-{{ 'success' if campaign.status == 'sent' else 'default' }}">{{ campaign.status }}</span>
+                </div>
+
+                {% if campaign.track_title %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Track</div>
+                    <div>{{ campaign.track_title }}</div>
+                </div>
+                {% endif %}
+
+                {% if campaign.spotify_link %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Spotify Link</div>
+                    <a href="{{ campaign.spotify_link }}" target="_blank" style="color: var(--accent); font-size: 13px;">Open →</a>
+                </div>
+                {% endif %}
+
+                {% if campaign.genre_filter %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Genre Filter</div>
+                    <div>{{ campaign.genre_filter }}</div>
+                </div>
+                {% endif %}
+
+                {% if campaign.tier_filter %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Tier Filter</div>
+                    <div>{{ campaign.tier_filter }}</div>
+                </div>
+                {% endif %}
+
+                {% if campaign.min_followers or campaign.max_followers %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Follower Range</div>
+                    <div>{{ campaign.min_followers or 0 }} - {{ campaign.max_followers or '∞' }}</div>
+                </div>
+                {% endif %}
+
+                {% if campaign.template_name %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Template</div>
+                    <div>{{ campaign.template_name }}</div>
+                </div>
+                {% endif %}
+
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Created</div>
+                    <div>{{ campaign.created_at[:16] if campaign.created_at else '—' }}</div>
+                </div>
+
+                {% if campaign.sent_at %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Sent At</div>
+                    <div>{{ campaign.sent_at[:16] }}</div>
+                </div>
+                {% endif %}
+
+                {% if campaign.notes %}
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px;">Notes</div>
+                    <div style="font-size: 13px;">{{ campaign.notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function sendCampaign() {
+    if (!confirm('Send this campaign to all matching curators? This cannot be undone.')) return;
+    const btn = event.target;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    try {
+        const res = await fetch(`/outreach/campaign/{{ campaign.id }}/send`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Success! Sent to ${data.sent} curators.`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+            btn.textContent = '🚀 Send Campaign';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        alert('Error: ' + e.message);
+        btn.textContent = '🚀 Send Campaign';
+        btn.disabled = false;
+    }
+}
+
+async function markResponse(emailId, status) {
+    if (!status) return;
+    try {
+        const res = await fetch('/outreach/response', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email_id: emailId, status: status})
+        });
+        const data = await res.json();
+        if (data.success) {
+            location.reload();
+        }
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}
+</script>
+
+<style>
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; }
+.stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.stat-value { font-size: 24px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.badge-success { background: rgba(74, 222, 128, 0.15); color: var(--success); }
+.badge-danger { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+.badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.badge-default { background: var(--glass-bg); color: var(--text-dim); }
+.data-table { border-collapse: collapse; }
+.data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+.data-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+.data-table tbody tr:hover { background: var(--glass-bg-hover); }
+.form-input-small { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text); }
+</style>
+{% endblock %}

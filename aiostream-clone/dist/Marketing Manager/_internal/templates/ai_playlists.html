@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Playlists - Marketing Manager</title>
+    <style>
+        :root { --bg-dark: #0d0d0d; --bg-card: #1a1a1a; --bg-card-hover: #222; --accent: #c8a45a; --accent-dim: #8a6d3b; --accent-glow: rgba(200,164,90,0.15); --text: #e0e0e0; --text-dim: #888; --border: #2a2a2a; --success: #4caf50; --warning: #ff9800; --danger: #f44336; --info: #2196f3; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; background: #111; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-brand h1 { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .sidebar-brand span { font-size: 11px; color: var(--text-dim); display: block; margin-top: 2px; }
+        .sidebar nav { flex: 1; padding: 16px 0; overflow-y: auto; max-height: calc(100vh - 200px); }
+        .sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar nav a:hover { color: var(--text); background: var(--bg-card); }
+        .sidebar nav a.active { color: var(--accent); background: var(--accent-glow); border-left-color: var(--accent); }
+        .sidebar nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+        .main { margin-left: 240px; min-height: 100vh; }
+        .topbar { background: rgba(13,13,13,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h2 { font-size: 20px; font-weight: 600; }
+        .page-content { padding: 32px; max-width: 1400px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .playlist-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .playlist-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .playlist-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; margin-top: 8px; }
+        .info-box { background: var(--bg-card-hover); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+        .info-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+        .info-box ul { list-style: none; padding: 0; }
+        .info-box ul li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+        .info-box ul li:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand"><h1>⚡ Marketing Manager</h1><span>Mystik Singh</span></div>
+        <nav>
+            <a href="{{ url_for('index') }}"><span class="icon">📊</span> Dashboard</a>
+            <a href="{{ url_for('proxies') }}"><span class="icon">🌐</span> Proxy Manager</a>
+            <a href="{{ url_for('streaming_accounts') }}"><span class="icon">🔒</span> Streaming Accounts</a>
+            <a href="{{ url_for('streaming_automation') }}"><span class="icon">▶️</span> Streaming Automation</a>
+            <a href="{{ url_for('account_creator') }}"><span class="icon">🔐</span> Account Creator</a>
+            <a href="{{ url_for('emulators') }}"><span class="icon">📱</span> Emulators</a>
+            <a href="{{ url_for('scheduler') }}"><span class="icon">⏰</span> Scheduler</a>
+            <a href="{{ url_for('statistics') }}"><span class="icon">📈</span> Statistics</a>
+            <a href="{{ url_for('tiktok') }}"><span class="icon">🎵</span> TikTok Bot</a>
+            <a href="{{ url_for('ai_playlists') }}" class="active"><span class="icon">🤖</span> AI Playlists</a>
+            <a href="{{ url_for('anti_detect') }}"><span class="icon">🛡️</span> Anti-Detect</a>
+            <a href="{{ url_for('email_accounts') }}"><span class="icon">📧</span> Email Accounts</a>
+            <a href="{{ url_for('export') }}"><span class="icon">💾</span> Backup Data</a>
+        </nav>
+        <div class="sidebar-footer">Memento Mori Series<br>Vol. 1 · 2 · 3</div>
+    </aside>
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>🤖 AI Playlist Creator</h2></div>
+        <div class="page-content">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><h3>✨ Generate AI Playlist</h3></div>
+                    <form id="aiGenerateForm">
+                        <div class="form-group"><label>Playlist Name</label><input class="form-control" name="name" id="ai_name" placeholder="Mystik Singh - Chill Vibes Mix" value="Mystik Singh - "></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Genre</label><select class="form-control" name="genre" id="ai_genre"><option value="Hip Hop">Hip Hop</option><option value="Trap">Trap</option><option value="Boom Bap">Boom Bap</option><option value="Conscious Hip Hop">Conscious Hip Hop</option><option value="R&B">R&B</option><option value="Pop">Pop</option><option value="Lo-fi">Lo-fi</option></select></div>
+                            <div class="form-group"><label>Mood</label><select class="form-control" name="mood" id="ai_mood"><option value="Chill">Chill</option><option value="Energetic">Energetic</option><option value="Dark">Dark</option><option value="Happy">Happy</option><option value="Melancholic">Melancholic</option><option value="Aggressive">Aggressive</option></select></div>
+                        </div>
+                        <div class="form-group"><label>Platform</label><select class="form-control" name="platform" id="ai_platform"><option value="Spotify">Spotify</option><option value="Apple Music">Apple Music</option><option value="YouTube Music">YouTube Music</option><option value="SoundCloud">SoundCloud</option><option value="Qobuz">Qobuz</option></select></div>
+                        <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px;">
+                            <p style="font-size:12px; color:var(--text-dim); margin:0;">🤖 In production, this connects to OpenAI's API to generate track recommendations based on your genre, mood, and Mystik Singh's discography. The playlist will auto-include Mystik Singh's tracks.</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%" id="generateBtn">🤖 Generate Playlist with AI</button>
+                    </form>
+                    <div id="generateResult" style="margin-top:16px; display:none; padding:12px; border-radius:8px;"></div>
+                </div>
+                <div>
+                    <div class="info-box" style="margin-bottom:24px;">
+                        <h4>🎯 How It Works</h4>
+                        <ul>
+                            <li>📝 Select genre and mood preferences</li>
+                            <li>🤖 AI analyzes Mystik Singh's discography</li>
+                            <li>🎵 Auto-includes Mystik Singh's tracks</li>
+                            <li>📋 Generates curated playlist tracklist</li>
+                            <li>🔗 Outputs shareable playlist links</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h4>🎵 Example Playlists</h4>
+                        <ul>
+                            <li>🎧 "Mystik Singh - Late Night Study Mix" (Lo-fi Hip Hop, Chill)</li>
+                            <li>🔥 "Mystik Singh - Gym Mode" (Trap, Energetic)</li>
+                            <li>🌙 "Mystik Singh - Midnight Reflection" (Conscious Hip Hop, Dark)</li>
+                            <li>☀️ "Mystik Singh - Summer Vibes" (Hip Hop, Happy)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>📋 Generated Playlists</h3></div>
+                {% for p in playlists %}
+                <div class="playlist-card">
+                    <h4>🎵 {{ p.playlist_name }}</h4>
+                    <div style="font-size:13px; color:var(--text-dim);">{{ p.description or 'No description' }}</div>
+                    <div class="playlist-meta">
+                        <span>🏷️ {{ p.genre or '-' }}</span>
+                        <span>🎭 {{ p.mood or '-' }}</span>
+                        <span>📱 {{ p.platform or 'Spotify' }}</span>
+                        <span>🤖 {{ p.generated_with or 'openai' }}</span>
+                        <span>📅 {{ p.created_at[:10] if p.created_at else '-' }}</span>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <form action="/ai-playlists/{{ p.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align:center; padding:40px; color:var(--text-dim)">No AI playlists generated yet. Use the form to create your first one.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+    <script>
+        document.getElementById('aiGenerateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating...';
+            const res = await fetch('/ai-playlists/generate', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: document.getElementById('ai_name').value,
+                    genre: document.getElementById('ai_genre').value,
+                    mood: document.getElementById('ai_mood').value,
+                    platform: document.getElementById('ai_platform').value
+                })
+            });
+            const result = await res.json();
+            const div = document.getElementById('generateResult');
+            div.style.display = 'block';
+            if(result.success) {
+                div.style.background = 'rgba(76,175,80,0.15)';
+                div.style.color = 'var(--success)';
+                div.innerHTML = `✅ ${result.message}<br><br>🎵 Playlist ID: ${result.playlist_id}<br>🔗 In production, this would return shareable links from Spotify/Apple Music.`;
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                div.style.background = 'rgba(244,67,54,0.15)';
+                div.style.color = 'var(--danger)';
+                div.textContent = 'Error: ' + (result.message || 'Unknown error');
+            }
+            btn.disabled = false;
+            btn.textContent = '🤖 Generate Playlist with AI';
+        });
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>
+</body>
+</html>

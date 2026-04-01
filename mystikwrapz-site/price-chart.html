@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing | Mystik Wrapz</title>
+<meta name="description" content="Mystik Wrapz complete pricing — Window Tint, Chrome Delete, Motorcycle Services, Wheels, Full & Partial Coverage by vehicle size.">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" href="https://i0.wp.com/mystikwrapz.com/wp-content/uploads/2026/01/cropped-banner-logo.png">
+</head>
+<body>
+
+<nav class="tron-nav">
+  <a href="index.html" class="logo">MYSTIK WRAPZ</a>
+  <a href="index.html#services">Services</a>
+  <a href="vinyl-wraps.html">Vinyl Wraps</a>
+  <a href="tint.html">Tint</a>
+  <a href="colored-ppf.html">PPF</a>
+  <a href="plasti-dip.html">Plasti Dip</a>
+  <a href="chrome-delete.html">Chrome Delete</a>
+  <a href="price-chart.html" class="active">Pricing</a>
+</nav>
+
+<section class="page-header">
+  <span class="badge badge-cyan">Complete Menu</span>
+  <h1 class="page-title">Pricing</h1>
+  <div class="tron-line"></div>
+  <p class="page-subtitle">Vehicle Size Finder · Service Menu · Time Estimates</p>
+</section>
+
+<!-- === SQUARE BOOKING EMBED === -->
+<section class="section" id="booking">
+  <div class="section-header reveal">
+    <span class="section-label">// Book Online</span>
+    <h2 class="section-title">Schedule Your Appointment</h2>
+    <div class="tron-line"></div>
+    <p class="section-desc">Select your service and time below — or call us directly.</p>
+  </div>
+
+  <div class="glass-card reveal" style="max-width:1100px;margin:0 auto;padding:0;overflow:hidden;">
+    <!-- SQUARE BOOKING EMBED — Replace the placeholder IDs below with your actual Square credentials -->
+    <!-- 
+      HOW TO SET UP:
+      1. Go to https://squareup.com/appointments and set up your business
+      2. Get your Location ID (found in Square Dashboard > Locations)
+      3. Get your App ID (from https://developer.squareup.com/apps)
+      4. Replace SQUARE_LOCATION_ID and SQUARE_APP_ID below
+    -->
+    <div style="padding:30px 30px 10px 30px;background:rgba(0,229,255,0.03);border-bottom:1px solid var(--glass-border);">
+      <span class="badge badge-green">Live Booking</span>
+      <p style="color:var(--text-dim);font-family:var(--font-heading);font-size:0.8rem;margin-top:8px;letter-spacing:1px;">
+        Powered by Square · Select Service · Pick Time · Confirm
+      </p>
+    </div>
+
+    <!-- Square Inline Booking Widget -->
+    <div id="sq-booking-container" style="min-height:650px;position:relative;">
+      <!-- PLACEHOLDER — Replace the 2 lines below with your actual Square embed code from: -->
+      <!-- https://developer.squareup.com/docs/appointments/online-checkout/integrate-square-embed -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:600px;padding:40px;text-align:center;">
+        <div style="font-family:var(--font-display);font-size:3rem;color:var(--cyan);margin-bottom:20px;text-shadow:var(--glow-cyan);">📅</div>
+        <h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--text-primary);letter-spacing:3px;margin-bottom:15px;">SQUARE BOOKING</h3>
+        <p style="color:var(--text-secondary);font-family:var(--font-heading);font-size:0.9rem;max-width:400px;line-height:1.8;margin-bottom:25px;">
+          To activate the booking widget, add your Square credentials.<br>
+          Replace <code style="color:var(--cyan);background:rgba(0,229,255,0.1);padding:2px 6px;border-radius:4px;">SQUARE_LOCATION_ID</code> and <code style="color:var(--cyan);background:rgba(0,229,255,0.1);padding:2px 6px;border-radius:4px;">SQUARE_APP_ID</code> below.
+        </p>
+        <div style="display:flex;gap:15px;flex-wrap:wrap;justify-content:center;margin-bottom:30px;">
+          <a href="tel:2135374795" class="btn btn-primary">📞 Call 213-537-4795</a>
+          <a href="https://squareup.com/appointments" target="_blank" class="btn btn-outline" style="font-size:0.8rem;">Open Square Dashboard →</a>
+        </div>
+
+        <!-- EXAMPLE SQUARE EMBED CODE (uncomment and fill in your IDs): -->
+        <!--
+        <div id="square-embed-booking"
+          data-location-id="YOUR_SQUARE_LOCATION_ID"
+          data-app-id="YOUR_SQUARE_APP_ID"
+          data-theme="dark"
+          data-panel-width="100%"
+          style="width:100%;min-height:600px;">
+        </div>
+        <script src="https://cdn.squareup.com/embed/v3/square-embed-booking.js"></script>
+        -->
+      </div>
+    </div>
+
+    <div style="padding:20px 30px;background:rgba(0,229,255,0.02);border-top:1px solid var(--glass-border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
+      <p style="color:var(--text-dim);font-family:var(--font-heading);font-size:0.8rem;letter-spacing:1px;">Need immediate assistance?</p>
+      <a href="tel:2135374795" class="btn btn-primary" style="padding:10px 24px;font-size:0.8rem;">📞 213-537-4795</a>
+    </div>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === VEHICLE SIZE FINDER === -->
+<section class="section" id="size-finder">
+  <div class="section-header reveal">
+    <span class="section-label">// Find Your Size</span>
+    <h2 class="section-title">Vehicle Size Finder</h2>
+    <div class="tron-line"></div>
+    <p class="section-desc">Find your vehicle's size category to get accurate pricing. LRG & XL both use Large Vehicle pricing.</p>
+  </div>
+
+  <div class="size-finder reveal">
+    <div class="size-finder-grid">
+      <select id="year-select"><option value="">Select Year</option></select>
+      <select id="make-select" disabled><option value="">Select Make</option></select>
+      <select id="model-select" disabled><option value="">Select Model</option></select>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <button onclick="findSize()" class="btn btn-primary">Find My Vehicle Size</button>
+      <button onclick="resetSize()" class="btn btn-outline" style="margin-left:10px;">Reset</button>
+    </div>
+    <div id="size-result" class="size-result"></div>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === WINDOW TINT === -->
+<section class="section" id="tint">
+  <div class="section-header reveal">
+    <span class="section-label">// Window Tint</span>
+    <h2 class="section-title">Window & Light Tint</h2>
+    <div class="tron-line"></div>
+  </div>
+
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Window Tint (Full Coverage)</td><td class="time">4–6 hrs</td><td class="price">$300</td></tr>
+        <tr><td class="service-name">Front Windshield Tint</td><td class="time">2–3 hrs</td><td class="price">$75</td></tr>
+        <tr><td class="service-name">Rear Windshield Tint</td><td class="time">2–3 hrs</td><td class="price">$75</td></tr>
+        <tr><td class="service-name">Side Window Tint (2 Windows)</td><td class="time">1–2 hrs</td><td class="price">$75</td></tr>
+        <tr><td class="service-name">Side Window Tint (4 Windows)</td><td class="time">2–3 hrs</td><td class="price">$150</td></tr>
+        <tr><td class="service-name">Headlight Tint</td><td class="time">1–2 hrs</td><td class="price">$150</td></tr>
+        <tr><td class="service-name">Taillight Tint</td><td class="time">1–2 hrs</td><td class="price">$150</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === CHROME DELETE === -->
+<section class="section" id="chrome-delete">
+  <div class="price-section-title">Chrome Delete</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">(Small) Exterior Chrome Delete</td><td class="time">6–10 hrs</td><td class="price">$150</td></tr>
+        <tr><td class="service-name">(Small) Interior Chrome Delete</td><td class="time">4–8 hrs</td><td class="price">$150</td></tr>
+        <tr><td class="service-name">(Med) Exterior Chrome Delete</td><td class="time">8–12 hrs</td><td class="price">$275</td></tr>
+        <tr><td class="service-name">(Med) Interior Chrome Delete</td><td class="time">6–10 hrs</td><td class="price">$200</td></tr>
+        <tr><td class="service-name">(Lrg) Exterior Chrome Delete</td><td class="time">10–16 hrs</td><td class="price">$500</td></tr>
+        <tr><td class="service-name">(Lrg) Interior Chrome Delete</td><td class="time">8–12 hrs</td><td class="price">$225</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === MOTORCYCLE === -->
+<section class="section" id="motorcycles">
+  <div class="price-section-title">Motorcycle Services</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Motorcycle (Clear PPF)</td><td class="time">24–48 hrs</td><td class="price">$1,500</td></tr>
+        <tr><td class="service-name">Motorcycle (Colored PPF)</td><td class="time">24–48 hrs</td><td class="price">$1,800</td></tr>
+        <tr><td class="service-name">Motorcycle (Plasti Dip)</td><td class="time">12–24 hrs</td><td class="price">$800</td></tr>
+        <tr><td class="service-name">Motorcycle (Vinyl Wrap)</td><td class="time">24–48 hrs</td><td class="price">$1,650</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === WHEELS === -->
+<section class="section" id="wheels">
+  <div class="price-section-title">Wheels Protection</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Wheels (Clear PPF)</td><td class="time">6–10 hrs</td><td class="price">$400</td></tr>
+        <tr><td class="service-name">Wheels (Colored PPF)</td><td class="time">8–12 hrs</td><td class="price">$600</td></tr>
+        <tr><td class="service-name">Wheels (Plasti Dip)</td><td class="time">4–8 hrs</td><td class="price">$400</td></tr>
+        <tr><td class="service-name">Wheels (Vinyl Wrap)</td><td class="time">6–10 hrs</td><td class="price">$500</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === FULL COVERAGE === -->
+<section class="section" id="full-coverage">
+  <div class="price-section-title">Full Coverage — Small Vehicle</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Small Vehicle Full Coverage (Clear PPF)</td><td class="time">48–72 hrs</td><td class="price">$2,250</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage (Colored PPF)</td><td class="time">48–72 hrs</td><td class="price">$3,000</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage (Plasti Dip)</td><td class="time">24–48 hrs</td><td class="price">$1,000</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage (Vinyl Wrap)</td><td class="time">48–72 hrs</td><td class="price">$2,250</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage w/ Door Jams (Clear PPF)</td><td class="time">72–96 hrs</td><td class="price">$4,200</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage w/ Door Jams (Colored PPF)</td><td class="time">72–96 hrs</td><td class="price">$5,550</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage w/ Door Jams (Plasti Dip)</td><td class="time">48–72 hrs</td><td class="price">$1,850</td></tr>
+        <tr><td class="service-name">Small Vehicle Full Coverage w/ Door Jams (Vinyl Wrap)</td><td class="time">72–96 hrs</td><td class="price">$3,950</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="price-section-title" style="margin-top:40px;">Full Coverage — Medium Vehicle</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Medium Vehicle Full Coverage (Clear PPF)</td><td class="time">72–96 hrs</td><td class="price">$3,000</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage (Colored PPF)</td><td class="time">72–96 hrs</td><td class="price">$4,000</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage (Plasti Dip)</td><td class="time">24–48 hrs</td><td class="price">$1,250</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage (Vinyl Wrap)</td><td class="time">72–96 hrs</td><td class="price">$2,850</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage w/ Door Jams (Clear PPF)</td><td class="time">72–96 hrs</td><td class="price">$5,600</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage w/ Door Jams (Colored PPF)</td><td class="time">72–96 hrs</td><td class="price">$7,400</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage w/ Door Jams (Plasti Dip)</td><td class="time">48–72 hrs</td><td class="price">$2,775</td></tr>
+        <tr><td class="service-name">Medium Vehicle Full Coverage w/ Door Jams (Vinyl Wrap)</td><td class="time">72–96 hrs</td><td class="price">$5,700</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="price-section-title" style="margin-top:40px;">Full Coverage — Large Vehicle</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Large Vehicle Full Coverage (Clear PPF)</td><td class="time">72–96 hrs</td><td class="price">$3,750</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage (Colored PPF)</td><td class="time">72–96 hrs</td><td class="price">$5,000</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage (Plasti Dip)</td><td class="time">48–72 hrs</td><td class="price">$1,500</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage (Vinyl Wrap)</td><td class="time">72–96 hrs</td><td class="price">$3,600</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage w/ Door Jams (Clear PPF)</td><td class="time">96–120 hrs</td><td class="price">$6,950</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage w/ Door Jams (Colored PPF)</td><td class="time">96–120 hrs</td><td class="price">$9,250</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage w/ Door Jams (Plasti Dip)</td><td class="time">72–96 hrs</td><td class="price">$3,700</td></tr>
+        <tr><td class="service-name">Large Vehicle Full Coverage w/ Door Jams (Vinyl Wrap)</td><td class="time">96–120 hrs</td><td class="price">$7,400</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === PARTIAL COVERAGE === -->
+<section class="section" id="partial-coverage">
+  <div class="price-section-title">Partial Coverage — Small Vehicle</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Small Vehicle Partial Coverage (Clear PPF)</td><td class="time">24–48 hrs</td><td class="price">$1,175</td></tr>
+        <tr><td class="service-name">Small Vehicle Partial Coverage (Colored PPF)</td><td class="time">24–36 hrs</td><td class="price">$1,500</td></tr>
+        <tr><td class="service-name">Small Vehicle Partial Coverage (Plasti Dip)</td><td class="time">12–24 hrs</td><td class="price">$500</td></tr>
+        <tr><td class="service-name">Small Vehicle Partial Coverage (Vinyl Wrap)</td><td class="time">24–36 hrs</td><td class="price">$950</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="price-section-title" style="margin-top:40px;">Partial Coverage — Medium Vehicle</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Medium Vehicle Partial Coverage (Clear PPF)</td><td class="time">24–48 hrs</td><td class="price">$1,550</td></tr>
+        <tr><td class="service-name">Medium Vehicle Partial Coverage (Colored PPF)</td><td class="time">24–48 hrs</td><td class="price">$2,000</td></tr>
+        <tr><td class="service-name">Medium Vehicle Partial Coverage (Plasti Dip)</td><td class="time">24–48 hrs</td><td class="price">$650</td></tr>
+        <tr><td class="service-name">Medium Vehicle Partial Coverage (Vinyl Wrap)</td><td class="time">24–48 hrs</td><td class="price">$1,250</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="price-section-title" style="margin-top:40px;">Partial Coverage — Large Vehicle</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Large Vehicle Partial Coverage (Clear PPF)</td><td class="time">48–72 hrs</td><td class="price">$1,950</td></tr>
+        <tr><td class="service-name">Large Vehicle Partial Coverage (Colored PPF)</td><td class="time">48–72 hrs</td><td class="price">$2,650</td></tr>
+        <tr><td class="service-name">Large Vehicle Partial Coverage (Plasti Dip)</td><td class="time">24–48 hrs</td><td class="price">$750</td></tr>
+        <tr><td class="service-name">Large Vehicle Partial Coverage (Vinyl Wrap)</td><td class="time">48–72 hrs</td><td class="price">$1,550</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === PPF PANELS === -->
+<section class="section" id="ppf-panels">
+  <div class="price-section-title">Clear PPF Panels</div>
+  <div class="glass-card reveal" style="overflow-x:auto;">
+    <table class="price-table">
+      <thead>
+        <tr><th>Service</th><th>Time</th><th>Price</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Front Bumper)</td><td class="time">4–8 hrs</td><td class="price">$875</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Hood)</td><td class="time">3–6 hrs</td><td class="price">$725</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Hood + Front Fenders)</td><td class="time">6–10 hrs</td><td class="price">$1,075</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Door Jams)</td><td class="time">8–14 hrs</td><td class="price">$1,275</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Pillars)</td><td class="time">3–5 hrs</td><td class="price">$525</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Rear Bumper)</td><td class="time">4–7 hrs</td><td class="price">$775</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Roof)</td><td class="time">4–8 hrs</td><td class="price">$925</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Roof + Pillars)</td><td class="time">6–10 hrs</td><td class="price">$1,225</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Trunk)</td><td class="time">3–6 hrs</td><td class="price">$625</td></tr>
+        <tr><td class="service-name">Small Vehicle Panel Clear PPF (Trunk + Rear Fenders)</td><td class="time">5–8 hrs</td><td class="price">$925</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Front Bumper)</td><td class="time">6–10 hrs</td><td class="price">$1,050</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Hood)</td><td class="time">5–8 hrs</td><td class="price">$950</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Hood + Front Fenders)</td><td class="time">8–12 hrs</td><td class="price">$1,300</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Door Jams)</td><td class="time">10–16 hrs</td><td class="price">$1,500</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Pillars)</td><td class="time">4–6 hrs</td><td class="price">$650</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Rear Bumper)</td><td class="time">5–8 hrs</td><td class="price">$925</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Roof)</td><td class="time">5–10 hrs</td><td class="price">$1,150</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Roof + Pillars)</td><td class="time">7–12 hrs</td><td class="price">$1,500</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Trunk)</td><td class="time">4–8 hrs</td><td class="price">$775</td></tr>
+        <tr><td class="service-name">Medium Vehicle Panel Clear PPF (Trunk + Rear Fenders)</td><td class="time">6–10 hrs</td><td class="price">$1,150</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Front Bumper)</td><td class="time">8–14 hrs</td><td class="price">$1,250</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Hood)</td><td class="time">6–10 hrs</td><td class="price">$1,100</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Hood + Front Fenders)</td><td class="time">10–16 hrs</td><td class="price">$1,600</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Door Jams)</td><td class="time">12–20 hrs</td><td class="price">$1,750</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Pillars)</td><td class="time">5–8 hrs</td><td class="price">$750</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Rear Bumper)</td><td class="time">6–10 hrs</td><td class="price">$1,075</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Roof)</td><td class="time">6–12 hrs</td><td class="price">$1,350</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Roof + Pillars)</td><td class="time">9–14 hrs</td><td class="price">$1,775</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Trunk)</td><td class="time">5–10 hrs</td><td class="price">$925</td></tr>
+        <tr><td class="service-name">Large Vehicle Panel Clear PPF (Trunk + Rear Fenders)</td><td class="time">8–12 hrs</td><td class="price">$1,375</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="tron-divider"></div>
+
+<!-- === DEPOSIT NOTICE === -->
+<section class="section">
+  <div class="deposit-notice reveal">
+    <span style="font-size:1.2rem;">50% Deposit Required</span><br>
+    On All Services<br>
+    <span style="font-size:0.8rem;opacity:0.7;margin-top:5px;display:block;">Some Materials May Require 13 Business Days For Shipping. Reserve Appointment Accordingly.</span>
+  </div>
+</section>
+
+<!-- === FOOTER === -->
+<footer class="footer">
+  <div class="footer-logo">MYSTIK WRAPZ</div>
+  <p><a href="index.html">Home</a> · <a href="vinyl-wraps.html">Vinyl</a> · <a href="tint.html">Tint</a> · <a href="colored-ppf.html">PPF</a> · <a href="plasti-dip.html">Plasti Dip</a> · <a href="chrome-delete.html">Chrome Delete</a> · <a href="tel:2135374795">213-537-4795</a><br>17623 Interurban Blvd · Snohomish, WA 98296</p>
+</footer>
+
+<a href="#" class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑</a>
+
+<script src="script.js"></script>
+<script>
+const vehicleData = {
+  "2024": { "Acura": ["ILX","TLX","RLX","MDX","RDX","NSX"], "Audi": ["A1","A3","A4","A5","A6","A7","A8","Q3","Q5","Q7","Q8","e-tron"], "BMW": ["2 Series","3 Series","4 Series","5 Series","7 Series","8 Series","X1","X3","X5","X7","i4","iX"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["CT4","CT5","Escalade","XT4","XT5","XT6"], "Chevrolet": ["Malibu","Impala","Camaro","Corvette","Spark","Sonic","Trax","Equinox","Blazer","Tahoe","Suburban","Colorado","Silverado","Traverse"], "Chrysler": ["300","Pacifica","Voyager"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Bronco","Edge","Escape","Explorer","Expedition","F-150","Maverick","Ranger","Super Duty"], "GMC": ["Terrain","Acadia","Yukon","Sierra","Canyon","Hummer EV"], "Honda": ["Civic","Accord","Pilot","CR-V","HR-V","Passport"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Palisade","Kona","Ioniq 5","Ioniq 6"], "Infiniti": ["Q50","Q60","QX50","QX55","QX60","QX80"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass","Gladiator","Wagoneer"], "Kia": ["Forte","K5","Stinger","Sportage","Sorento","Telluride","EV6","EV9"], "Lexus": ["ES","IS","LS","RC","LC","UX","NX","RX","GX","LX"], "Lincoln": ["Corsair","Nautilus","Aviator","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-30","CX-5","CX-50","CX-90"], "Mercedes": ["A-Class","C-Class","E-Class","S-Class","GLA","GLB","GLC","GLE","GLS","EQS","Maybach"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Pathfinder","Armada","Z","Leaf"], "Porsche": ["718 Cayman","718 Boxster","911","Panamera","Cayenne","Macan","Taycan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","Ascent","BRZ","WRX"], "Tesla": ["Model 3","Model Y","Model S","Model X","Cybertruck"], "Toyota": ["Camry","Corolla","GR86","Prius","RAV4","Highlander","4Runner","Sequoia","Tundra","Tacoma","bZ4X"], "Volkswagen": ["Jetta","Passat","Arteon","Taos","Tiguan","Atlas","ID.4"], "Volvo": ["S60","S90","XC40","XC60","XC90","C40"] },
+  "2023": { "Acura": ["ILX","TLX","RLX","MDX","RDX","NSX"], "Audi": ["A1","A3","A4","A5","A6","A7","A8","Q3","Q5","Q7","Q8","e-tron"], "BMW": ["2 Series","3 Series","4 Series","5 Series","7 Series","8 Series","X1","X3","X5","X7","i4","iX"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["CT4","CT5","Escalade","XT4","XT5","XT6"], "Chevrolet": ["Malibu","Impala","Camaro","Corvette","Spark","Sonic","Trax","Equinox","Blazer","Tahoe","Suburban","Colorado","Silverado","Traverse"], "Chrysler": ["300","Pacifica","Voyager"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Bronco","Edge","Escape","Explorer","Expedition","F-150","Maverick","Ranger","Super Duty"], "GMC": ["Terrain","Acadia","Yukon","Sierra","Canyon","Hummer EV"], "Honda": ["Civic","Accord","Pilot","CR-V","HR-V","Passport"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Palisade","Kona","Ioniq 5"], "Infiniti": ["Q50","Q60","QX50","QX55","QX60","QX80"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass","Gladiator"], "Kia": ["Forte","K5","Stinger","Sportage","Sorento","Telluride","EV6"], "Lexus": ["ES","IS","LS","RC","LC","UX","NX","RX","GX","LX"], "Lincoln": ["Corsair","Nautilus","Aviator","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-30","CX-5","CX-50","CX-90"], "Mercedes": ["A-Class","C-Class","E-Class","S-Class","GLA","GLB","GLC","GLE","GLS","EQS"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Pathfinder","Armada","Z","Leaf"], "Porsche": ["718 Cayman","718 Boxster","911","Panamera","Cayenne","Macan","Taycan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","Ascent","BRZ","WRX"], "Tesla": ["Model 3","Model Y","Model S","Model X","Cybertruck"], "Toyota": ["Camry","Corolla","GR86","Prius","RAV4","Highlander","4Runner","Sequoia","Tundra","Tacoma"], "Volkswagen": ["Jetta","Passat","Arteon","Taos","Tiguan","Atlas","ID.4"], "Volvo": ["S60","S90","XC40","XC60","XC90","C40"] },
+  "2022": { "Acura": ["ILX","TLX","RLX","MDX","RDX","NSX"], "Audi": ["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7","e-tron"], "BMW": ["2 Series","3 Series","4 Series","5 Series","7 Series","8 Series","X1","X3","X5","X7"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["CT4","CT5","Escalade","XT4","XT5","XT6"], "Chevrolet": ["Malibu","Camaro","Corvette","Spark","Trax","Equinox","Blazer","Tahoe","Suburban","Colorado","Silverado","Traverse"], "Chrysler": ["300","Pacifica"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Bronco","Edge","Escape","Explorer","Expedition","F-150","Maverick","Ranger"], "GMC": ["Terrain","Acadia","Yukon","Sierra","Canyon"], "Honda": ["Civic","Accord","Pilot","CR-V","HR-V"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Palisade","Kona","Ioniq 5"], "Infiniti": ["Q50","Q60","QX50","QX55","QX60","QX80"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass","Gladiator"], "Kia": ["Forte","K5","Stinger","Sportage","Sorento","Telluride","EV6"], "Lexus": ["ES","IS","LS","RC","LC","UX","NX","RX","GX","LX"], "Lincoln": ["Corsair","Nautilus","Aviator","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-30","CX-5","CX-90"], "Mercedes": ["A-Class","C-Class","E-Class","S-Class","GLA","GLB","GLC","GLE","GLS"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Pathfinder","Armada","Z","Leaf"], "Porsche": ["718 Cayman","718 Boxster","911","Panamera","Cayenne","Macan","Taycan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","Ascent","BRZ","WRX"], "Tesla": ["Model 3","Model Y","Model S","Model X"], "Toyota": ["Camry","Corolla","GR86","Prius","RAV4","Highlander","4Runner","Sequoia","Tundra","Tacoma"], "Volkswagen": ["Jetta","Passat","Arteon","Taos","Tiguan","Atlas"], "Volvo": ["S60","S90","XC40","XC60","XC90"] },
+  "2021": { "Acura": ["ILX","TLX","RLX","MDX","RDX"], "Audi": ["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7"], "BMW": ["2 Series","3 Series","4 Series","5 Series","7 Series","X1","X3","X5","X7"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["CT4","CT5","Escalade","XT4","XT5","XT6"], "Chevrolet": ["Malibu","Camaro","Corvette","Equinox","Tahoe","Suburban","Silverado","Traverse"], "Chrysler": ["300","Pacifica"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Edge","Escape","Explorer","Expedition","F-150","Maverick","Ranger"], "GMC": ["Terrain","Acadia","Yukon","Sierra"], "Honda": ["Civic","Accord","Pilot","CR-V"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Kona"], "Infiniti": ["Q50","Q60","QX50","QX55","QX60"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass"], "Kia": ["Forte","K5","Stinger","Sportage","Telluride"], "Lexus": ["ES","IS","LS","RC","UX","NX","RX","GX","LX"], "Lincoln": ["Corsair","Nautilus","Aviator","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-30","CX-5"], "Mercedes": ["A-Class","C-Class","E-Class","S-Class","GLA","GLB","GLC","GLE"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Armada","Leaf"], "Porsche": ["718 Cayman","911","Panamera","Cayenne","Macan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","Ascent","WRX"], "Tesla": ["Model 3","Model Y","Model S","Model X"], "Toyota": ["Camry","Corolla","Prius","RAV4","Highlander","4Runner","Tundra","Tacoma"], "Volkswagen": ["Jetta","Passat","Taos","Tiguan","Atlas"], "Volvo": ["S60","S90","XC40","XC60","XC90"] },
+  "2020": { "Acura": ["ILX","TLX","RLX","MDX","RDX"], "Audi": ["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7"], "BMW": ["3 Series","4 Series","5 Series","7 Series","X1","X3","X5","X7"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["CT4","CT5","Escalade","XT4","XT5","XT6"], "Chevrolet": ["Malibu","Camaro","Corvette","Equinox","Tahoe","Suburban","Silverado","Traverse"], "Chrysler": ["300","Pacifica"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Edge","Escape","Explorer","Expedition","F-150","Ranger"], "GMC": ["Terrain","Acadia","Yukon","Sierra"], "Honda": ["Civic","Accord","Pilot","CR-V"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Kona"], "Infiniti": ["Q50","Q60","QX50","QX60"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass"], "Kia": ["Forte","K5","Stinger","Sportage","Telluride"], "Lexus": ["ES","IS","LS","RC","UX","NX","RX","GX","LX"], "Lincoln": ["Nautilus","Aviator","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-5","CX-9"], "Mercedes": ["C-Class","E-Class","S-Class","GLC","GLE","GLS"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Armada","Leaf"], "Porsche": ["911","Panamera","Cayenne","Macan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","Ascent","WRX"], "Tesla": ["Model 3","Model S","Model X"], "Toyota": ["Camry","Corolla","Prius","RAV4","Highlander","4Runner","Tundra","Tacoma"], "Volkswagen": ["Jetta","Passat","Tiguan","Atlas"], "Volvo": ["S60","S90","XC60","XC90"] },
+  "2019": { "Acura": ["ILX","TLX","RLX","MDX","RDX"], "Audi": ["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7"], "BMW": ["3 Series","4 Series","5 Series","7 Series","X1","X3","X5","X7"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["ATS","CTS","Escalade","XT4","XT5"], "Chevrolet": ["Malibu","Camaro","Corvette","Equinox","Tahoe","Suburban","Silverado","Traverse"], "Chrysler": ["300","Pacifica"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Edge","Escape","Explorer","Expedition","F-150","Ranger"], "GMC": ["Terrain","Acadia","Yukon","Sierra"], "Honda": ["Civic","Accord","Pilot","CR-V"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Kona"], "Infiniti": ["Q50","Q60","QX50","QX60","QX80"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass"], "Kia": ["Forte","Optima","Stinger","Sportage","Telluride"], "Lexus": ["ES","IS","LS","RC","UX","NX","RX","GX","LX"], "Lincoln": ["MKZ","Nautilus","Aviator","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-5","CX-9"], "Mercedes": ["C-Class","E-Class","S-Class","GLC","GLE","GLS"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Armada","Leaf"], "Porsche": ["911","Panamera","Cayenne","Macan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","WRX"], "Tesla": ["Model 3","Model S","Model X"], "Toyota": ["Camry","Corolla","Prius","RAV4","Highlander","4Runner","Tundra","Tacoma"], "Volkswagen": ["Jetta","Passat","Tiguan","Atlas"], "Volvo": ["S60","S90","XC60","XC90"] },
+  "2018": { "Acura": ["ILX","TLX","RLX","MDX","RDX"], "Audi": ["A3","A4","A5","A6","A7","A8","Q3","Q5","Q7"], "BMW": ["3 Series","4 Series","5 Series","7 Series","X1","X3","X5"], "Buick": ["Encore","Envision","Enclave"], "Cadillac": ["ATS","CTS","Escalade","XT5"], "Chevrolet": ["Malibu","Camaro","Corvette","Equinox","Tahoe","Suburban","Silverado","Traverse"], "Chrysler": ["300","Pacifica"], "Dodge": ["Challenger","Charger","Durango"], "Ford": ["Mustang","Edge","Escape","Explorer","Expedition","F-150","Ranger"], "GMC": ["Terrain","Acadia","Yukon","Sierra"], "Honda": ["Civic","Accord","Pilot","CR-V"], "Hyundai": ["Elantra","Sonata","Tucson","Santa Fe","Kona"], "Infiniti": ["Q50","Q60","QX30","QX60","QX80"], "Jeep": ["Wrangler","Grand Cherokee","Cherokee","Compass"], "Kia": ["Forte","Optima","Stinger","Sportage","Sorento"], "Lexus": ["ES","IS","LS","RC","NX","RX","GX","LX"], "Lincoln": ["MKZ","MKX","Nautilus","Navigator"], "Mazda": ["Mazda3","Mazda6","CX-5","CX-9"], "Mercedes": ["C-Class","E-Class","S-Class","GLC","GLE","GLS"], "Nissan": ["Sentra","Altima","Maxima","Rogue","Murano","Armada","Leaf"], "Porsche": ["911","Panamera","Cayenne","Macan"], "Ram": ["1500","2500","3500"], "Subaru": ["Impreza","Legacy","Outback","Forester","Crosstrek","WRX"], "Tesla": ["Model 3","Model S","Model X"], "Toyota": ["Camry","Corolla","Prius","RAV4","Highlander","4Runner","Tundra","Tacoma"], "Volkswagen": ["Jetta","Passat","Tiguan","Atlas"], "Volvo": ["S60","S90","XC60","XC90"] }
+};
+
+function populateYears() {
+  const yearSelect = document.getElementById('year-select');
+  Object.keys(vehicleData).sort((a,b)=>b-a).forEach(year => {
+    const opt = document.createElement('option');
+    opt.value = year;
+    opt.textContent = year;
+    yearSelect.appendChild(opt);
+  });
+}
+
+document.getElementById('year-select').addEventListener('change', function() {
+  const makeSelect = document.getElementById('make-select');
+  const modelSelect = document.getElementById('model-select');
+  makeSelect.innerHTML = '<option value="">Select Make</option>';
+  modelSelect.innerHTML = '<option value="">Select Model</option>';
+  modelSelect.disabled = true;
+  if (this.value && vehicleData[this.value]) {
+    makeSelect.disabled = false;
+    Object.keys(vehicleData[this.value]).sort().forEach(make => {
+      const opt = document.createElement('option');
+      opt.value = make;
+      opt.textContent = make;
+      makeSelect.appendChild(opt);
+    });
+  } else {
+    makeSelect.disabled = true;
+  }
+});
+
+document.getElementById('make-select').addEventListener('change', function() {
+  const modelSelect = document.getElementById('model-select');
+  modelSelect.innerHTML = '<option value="">Select Model</option>';
+  const year = document.getElementById('year-select').value;
+  if (this.value && vehicleData[year] && vehicleData[year][this.value]) {
+    modelSelect.disabled = false;
+    vehicleData[year][this.value].forEach(model => {
+      const opt = document.createElement('option');
+      opt.value = model;
+      opt.textContent = model;
+      modelSelect.appendChild(opt);
+    });
+  } else {
+    modelSelect.disabled = true;
+  }
+});
+
+function findSize() {
+  const year = document.getElementById('year-select').value;
+  const make = document.getElementById('make-select').value;
+  const model = document.getElementById('model-select').value;
+  const result = document.getElementById('size-result');
+  if (!year || !make || !model) { alert('Please select Year, Make, and Model.'); return; }
+  const largeKeywords = ['F-150','Silverado','Sierra','Ram','Tundra','Tacoma','Expedition','Suburban','Tahoe','Yukon','Navigator','Escalade','Sequoia','Armada','Durango','4Runner','Super Duty','2500','3500','Hummer'];
+  const smallKeywords = ['Mini','Smart','Fiesta','Spark','Sonic','Mirage','Versa','Mighty'];
+  const fullName = make + ' ' + model;
+  let size = 'Medium';
+  if (largeKeywords.some(k => fullName.includes(k))) size = 'Large';
+  else if (smallKeywords.some(k => fullName.includes(k))) size = 'Small';
+  result.innerHTML = `VEHICLE SIZE: <span style="color:var(--cyan);font-size:1.5rem;">${size}</span><br><span style="font-size:0.8rem;color:var(--text-dim);font-family:var(--font-heading);letter-spacing:1px;">LRG & XL Results Both Use Large Vehicle Pricing</span>`;
+  result.classList.add('show');
+}
+
+function resetSize() {
+  document.getElementById('year-select').value = '';
+  document.getElementById('make-select').value = '';
+  document.getElementById('make-select').innerHTML = '<option value="">Select Make</option>';
+  document.getElementById('make-select').disabled = true;
+  document.getElementById('model-select').value = '';
+  document.getElementById('model-select').innerHTML = '<option value="">Select Model</option>';
+  document.getElementById('model-select').disabled = true;
+  document.getElementById('size-result').classList.remove('show');
+}
+
+populateYears();
+</script>
+
+</body>
+</html>

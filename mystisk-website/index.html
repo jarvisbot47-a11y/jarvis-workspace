@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en" data-scroll="0">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystik — Memento Mori</title>
+  <meta name="description" content="Official home of Mystik. Memento Mori — an ongoing series. Stream the full catalog. Remember death.">
+  <meta property="og:title" content="Mystik — Memento Mori">
+  <meta property="og:description" content="Memento Mori — Remember death. Make music that outlives you.">
+  <meta property="og:type" content="website">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" async></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-follower" id="cursorFollower"></div>
+
+  <!-- Three.js Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- 3D Logo Scene Canvas (foreground) -->
+  <canvas id="logo-canvas"></canvas>
+
+  <!-- Ambient light blobs -->
+  <div class="light-blob blob-1" data-speed="0.3"></div>
+  <div class="light-blob blob-2" data-speed="0.5"></div>
+  <div class="light-blob blob-3" data-speed="0.7"></div>
+
+  <!-- Grain overlay -->
+  <div class="grain"></div>
+
+  <!-- ─── NAV ─── -->
+  <nav class="nav" id="mainNav">
+    <div class="nav-left">
+      <a href="#hero" class="nav-logo" data-hover>
+        <img src="logo.png" alt="Mystik" class="logo-img" id="navLogoImg">
+      </a>
+    </div>
+    <div class="nav-center" id="navLinks">
+      <a href="#music" class="nav-item" data-hover>Music</a>
+      <a href="#about" class="nav-item" data-hover>About</a>
+      <a href="#signup" class="nav-item" data-hover>Newsletter</a>
+      <a href="#tour" class="nav-item" data-hover>Tour</a>
+      <a href="#connect" class="nav-item" data-hover>Connect</a>
+    </div>
+    <div class="nav-right">
+      <a href="https://open.spotify.com/artist/YOUR_ID" target="_blank" class="nav-spotify" data-hover>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <span>Spotify</span>
+      </a>
+      <button class="nav-menu-btn" id="menuToggle" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#music" class="mobile-link">Music</a>
+    <a href="#about" class="mobile-link">About</a>
+    <a href="#signup" class="mobile-link">Newsletter</a>
+    <a href="#tour" class="mobile-link">Tour</a>
+    <a href="#connect" class="mobile-link">Connect</a>
+  </div>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero" id="hero" data-section>
+    <div class="hero-inner">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-line"></span>
+        <span class="eyebrow-text">Independent Since 2024</span>
+        <span class="eyebrow-line"></span>
+      </div>
+
+      <div class="hero-title-wrap" id="heroTitle">
+        <div class="hero-logo-3d" id="heroLogo3D">
+          <canvas id="hero-logo-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="hero-tagline" id="heroTagline">
+        <div class="tagline-rule"></div>
+        <p class="tagline-text">Memento Mori — Remember death.<br>Make music that outlives you.</p>
+        <div class="tagline-rule"></div>
+      </div>
+
+      <div class="hero-cta" id="heroCta">
+        <a href="https://open.spotify.com/artist/YOUR_ID" target="_blank" class="btn-hero-primary" data-hover-lift>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          Stream Now
+        </a>
+        <a href="#signup" class="btn-hero-ghost" data-hover-lift>Join the List</a>
+      </div>
+
+      <div class="hero-stats" id="heroStats">
+        <div class="h-stat" data-hover>
+          <span class="h-stat-num" data-count="222248">0</span>
+          <span class="h-stat-label">All-Time Streams</span>
+        </div>
+        <div class="h-stat-divider"></div>
+        <div class="h-stat" data-hover>
+          <span class="h-stat-num" data-count="12595">0</span>
+          <span class="h-stat-label">Monthly Listeners</span>
+        </div>
+        <div class="h-stat-divider"></div>
+        <div class="h-stat" data-hover>
+          <span class="h-stat-num" data-count="65">0</span>
+          <span class="h-stat-label">Tracks</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-cue" id="scrollCue">
+      <div class="scroll-cue-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ─── MARQUEE ─── -->
+  <div class="marquee-section">
+    <div class="marquee-track" id="marqueeTrack">
+      <span class="marquee-item">MEMENTO MORI VOL. 3 OUT NOW</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">LEMON JUICE — 8,042 STREAMS</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">222,248 ALL-TIME STREAMS</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">MONEY TALK LIKE AH SHIT — 4,128</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">DARK LIQUOR — 108,333 ALL-TIME</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">MEMENTO MORI VOL. 2</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">MEMENTO MORI VOL. 1</span>
+      <span class="marquee-sep">◆</span>
+      <span class="marquee-item">REMEMBER DEATH</span>
+      <span class="marquee-sep">◆</span>
+    </div>
+  </div>
+
+  <!-- ─── MUSIC ─── -->
+  <section class="section music-section" id="music" data-section>
+    <div class="section-container">
+      <div class="section-label-wrap">
+        <span class="section-label">The Catalog</span>
+      </div>
+      <h2 class="section-title" data-hover-lift>The Series</h2>
+      <p class="section-sub">An ongoing body of work. Remember death.</p>
+
+      <div class="albums-stack">
+
+        <!-- VOL. 3 -->
+        <div class="album-tile tile-1" data-tilt data-hover>
+          <div class="tile-image-wrap">
+            <div class="tile-image">
+              <img src="https://i.scdn.co/image/ab67616d0000b2731ed50c5de9dad3ee5a1827f5" alt="Memento Mori Vol. 3" loading="lazy">
+              <div class="tile-image-overlay"></div>
+            </div>
+            <div class="tile-badge">HOT</div>
+          </div>
+          <div class="tile-body">
+            <div class="tile-vol">Vol. 3</div>
+            <h3 class="tile-name">Memento Mori, Vol. 3</h3>
+            <div class="tile-date">2026 Remastered · March 1, 2026</div>
+            <div class="tile-streams">
+              <div class="ts-item">
+                <span class="ts-num">18,987</span>
+                <span class="ts-label">All-time streams</span>
+              </div>
+              <div class="ts-item">
+                <span class="ts-num">17</span>
+                <span class="ts-label">Tracks</span>
+              </div>
+            </div>
+            <div class="tile-top-tracks">
+              <div class="ttr-header">Top Tracks</div>
+              <div class="ttr-row"><span class="ttr-n">01</span><span class="ttr-nm">Lemon Juice</span><span class="ttr-s">8,042</span></div>
+              <div class="ttr-row"><span class="ttr-n">02</span><span class="ttr-nm">Money Talk Like Ah Shit</span><span class="ttr-s">4,128</span></div>
+              <div class="ttr-row"><span class="ttr-n">03</span><span class="ttr-nm">Skillet</span><span class="ttr-s">2,189</span></div>
+              <div class="ttr-row"><span class="ttr-n">04</span><span class="ttr-nm">Hood Mystic</span><span class="ttr-s">1,671</span></div>
+            </div>
+            <div class="tile-actions">
+              <a href="https://open.spotify.com/search/memento%20mori%20vol.%203%20mystik" target="_blank" class="tile-btn spotify-btn" data-hover-lift>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                Listen on Spotify
+              </a>
+            </div>
+            <div class="spotify-embed">
+              <iframe style="border-radius:12px" src="https://open.spotify.com/embed/album/0wb6BVYUNtFW0YST2IwgG5?utm_source=generator&theme=0" width="100%" height="380" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- VOL. 2 -->
+        <div class="album-tile tile-2" data-tilt data-hover>
+          <div class="tile-image-wrap">
+            <div class="tile-image">
+              <img src="https://i.scdn.co/image/ab67616d0000b273229e9a21c577f255bda83d47" alt="Memento Mori Vol. 2" loading="lazy">
+              <div class="tile-image-overlay"></div>
+            </div>
+          </div>
+          <div class="tile-body">
+            <div class="tile-vol">Vol. 2</div>
+            <h3 class="tile-name">Memento Mori, Vol. 2</h3>
+            <div class="tile-date">Aug 2025 + May 2024 single</div>
+            <div class="tile-streams">
+              <div class="ts-item">
+                <span class="ts-num">12,877</span>
+                <span class="ts-label">All-time streams</span>
+              </div>
+              <div class="ts-item">
+                <span class="ts-num">17</span>
+                <span class="ts-label">Tracks</span>
+              </div>
+            </div>
+            <div class="tile-top-tracks">
+              <div class="ttr-header">Top Tracks</div>
+              <div class="ttr-row"><span class="ttr-n">01</span><span class="ttr-nm">Dimitri's Playground</span><span class="ttr-s">3,226</span></div>
+              <div class="ttr-row"><span class="ttr-n">02</span><span class="ttr-nm">Onyx</span><span class="ttr-s">2,829</span></div>
+              <div class="ttr-row"><span class="ttr-n">03</span><span class="ttr-nm">432</span><span class="ttr-s">1,688</span></div>
+              <div class="ttr-row"><span class="ttr-n">04</span><span class="ttr-nm">Spirit Talk</span><span class="ttr-s">109</span></div>
+            </div>
+            <div class="tile-actions">
+              <a href="https://open.spotify.com/search/memento%20mori%20vol.%202%20mystik" target="_blank" class="tile-btn spotify-btn" data-hover-lift>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                Listen on Spotify
+              </a>
+            </div>
+            <div class="spotify-embed">
+              <iframe style="border-radius:12px" src="https://open.spotify.com/embed/album/0Pe4dekB0JHj1WctvSMLo1?utm_source=generator&theme=0" width="100%" height="380" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- VOL. 1 -->
+        <div class="album-tile tile-3" data-tilt data-hover>
+          <div class="tile-image-wrap">
+            <div class="tile-image">
+              <img src="https://i.scdn.co/image/ab67616d0000b273882e0377fefe5990a6384437" alt="Memento Mori Vol. 1" loading="lazy">
+              <div class="tile-image-overlay"></div>
+            </div>
+          </div>
+          <div class="tile-body">
+            <div class="tile-vol">Vol. 1</div>
+            <h3 class="tile-name">Memento Mori, Vol. 1</h3>
+            <div class="tile-date">Dec 2024 + June 2025 Remastered</div>
+            <div class="tile-streams">
+              <div class="ts-item">
+                <span class="ts-num">80,145</span>
+                <span class="ts-label">All-time streams</span>
+              </div>
+              <div class="ts-item">
+                <span class="ts-num">15</span>
+                <span class="ts-label">Tracks</span>
+              </div>
+            </div>
+            <div class="tile-top-tracks">
+              <div class="ttr-header">Top Tracks</div>
+              <div class="ttr-row"><span class="ttr-n">01</span><span class="ttr-nm">Dark Liquor</span><span class="ttr-s">108,333</span></div>
+              <div class="ttr-row"><span class="ttr-n">02</span><span class="ttr-nm">You Know My Hustle</span><span class="ttr-s">22,530</span></div>
+              <div class="ttr-row"><span class="ttr-n">03</span><span class="ttr-nm">Listen Kid</span><span class="ttr-s">12,517</span></div>
+              <div class="ttr-row"><span class="ttr-n">04</span><span class="ttr-nm">Top G</span><span class="ttr-s">6,656</span></div>
+              <div class="ttr-row"><span class="ttr-n">05</span><span class="ttr-nm">Comma$ + Commas</span><span class="ttr-s">6,433</span></div>
+            </div>
+            <div class="tile-actions">
+              <a href="https://open.spotify.com/search/memento%20mori%20vol.%201%20mystik" target="_blank" class="tile-btn spotify-btn" data-hover-lift>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                Listen on Spotify
+              </a>
+            </div>
+            <div class="spotify-embed">
+              <iframe style="border-radius:12px" src="https://open.spotify.com/embed/album/1m9ciXW7myuZbo6CrrnuUr?utm_source=generator&theme=0" width="100%" height="380" frameBorder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ABOUT ─── -->
+  <section class="section about-section" id="about" data-section>
+    <div class="section-container">
+      <div class="about-grid">
+        <div class="about-text">
+          <span class="section-label">The Artist</span>
+          <h2 class="about-title" data-hover-lift>Who is<br>Mystik?</h2>
+          <p class="about-p">Mystik is an independent artist built on a simple philosophy: <em>Memento Mori</em> — remember that you will die.</p>
+          <p class="about-p">Which means every track, every word, every release has to be something worth surviving you.</p>
+          <p class="about-p">Rooted in street-level observation, noir aesthetics, and hard-won wisdom, Mystik makes music for people who think deeply while they grind. Not for the algorithm. Not for the charts. For the ones who actually listen.</p>
+        </div>
+
+        <div class="about-right">
+          <div class="about-map glass-panel" data-tilt>
+            <div class="panel-header">
+              <span>Top Listener Cities</span>
+              <span class="panel-sub">28-day data</span>
+            </div>
+            <div class="city-list" id="cityList">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="about-pillars">
+            <div class="pillar glass-panel" data-tilt data-hover>
+              <div class="pillar-num">01</div>
+              <div class="pillar-text">Independent since 2024</div>
+            </div>
+            <div class="pillar glass-panel" data-tilt data-hover>
+              <div class="pillar-num">02</div>
+              <div class="pillar-text">40+ cities worldwide</div>
+            </div>
+            <div class="pillar glass-panel" data-tilt data-hover>
+              <div class="pillar-num">03</div>
+              <div class="pillar-text">An ongoing series. Remember death.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TOUR ─── -->
+  <section class="section tour-section" id="tour" data-section>
+    <div class="section-container">
+      <span class="section-label">Live</span>
+      <h2 class="section-title" data-hover-lift>Catch Me Live</h2>
+      <p class="section-sub">Tour dates coming. Be the first to know.</p>
+
+      <div class="tour-grid" id="tourGrid">
+        <div class="tour-empty glass-panel" data-tilt>
+          <div class="tour-empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <h3>Dates Coming Soon</h3>
+          <p>Join the newsletter to get tour announcements before anyone else.</p>
+          <a href="#signup" class="tile-btn accent-btn" data-hover-lift>Get notified</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── NEWSLETTER ─── -->
+  <section class="section signup-section" id="signup" data-section>
+    <div class="section-container">
+      <div class="signup-wrap glass-panel" data-tilt>
+        <div class="signup-left">
+          <span class="section-label">Join the Movement</span>
+          <h2 class="signup-title" data-hover-lift>Get There<br>First.</h2>
+          <p class="signup-desc">Unreleased tracks. Demo versions. Behind-the-music. Merch drops before anyone else. Tour announcements. No spam.</p>
+
+          <form class="signup-form" id="signupForm" novalidate>
+            <div class="field-wrap">
+              <input type="text" id="nameInput" name="name" placeholder="Your name or alias" autocomplete="given-name" required>
+              <div class="field-line"></div>
+            </div>
+            <div class="field-wrap">
+              <input type="email" id="emailInput" name="email" placeholder="your@email.com" autocomplete="email" required>
+              <div class="field-line"></div>
+            </div>
+            <div class="field-wrap field-select-wrap">
+              <select id="interestSelect" name="interest">
+                <option value="" disabled selected>What are you here for?</option>
+                <option value="new-music">New Music First</option>
+                <option value="tour-dates">Tour Dates & Live Shows</option>
+                <option value="merch">Merch Drops</option>
+                <option value="everything">All of the Above</option>
+              </select>
+              <div class="field-line"></div>
+            </div>
+            <button type="submit" class="tile-btn accent-btn btn-full" id="submitBtn" data-hover-lift>
+              <span class="btn-label">Join the List — It's Free</span>
+              <span class="btn-spinner" style="display:none">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              </span>
+            </button>
+          </form>
+          <div class="signup-success" id="signupSuccess" style="display:none">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <h3>You're in.</h3>
+            <p>Watch your inbox. Something's coming.</p>
+          </div>
+          <p class="signup-disclaimer">No spam. Unsubscribe anytime.</p>
+        </div>
+
+        <div class="signup-right">
+          <div class="signup-visual-ring">
+            <div class="ring-core"></div>
+            <div class="ring-mid"></div>
+            <div class="ring-outer"></div>
+            <div class="ring-text">
+              <span>UNRELEASED</span>
+              <span>MUSIC</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CONNECT ─── -->
+  <section class="section connect-section" id="connect" data-section>
+    <div class="section-container">
+      <span class="section-label">Follow</span>
+      <h2 class="section-title" data-hover-lift>Stay Connected</h2>
+
+      <div class="connect-grid">
+        <a href="https://open.spotify.com/artist/YOUR_ID" target="_blank" class="connect-card glass-panel" data-tilt data-hover>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+          <span class="conn-name">Spotify</span>
+          <span class="conn-handle">@mystik</span>
+        </a>
+
+        <a href="https://www.instagram.com/YOUR_IG" target="_blank" class="connect-card glass-panel" data-tilt data-hover>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          <span class="conn-name">Instagram</span>
+          <span class="conn-handle">@mystik</span>
+        </a>
+
+        <a href="https://www.tiktok.com/@mystik" target="_blank" class="connect-card glass-panel" data-tilt data-hover>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/></svg>
+          <span class="conn-name">TikTok</span>
+          <span class="conn-handle">@mystik</span>
+        </a>
+
+        <a href="https://www.youtube.com/@mystik" target="_blank" class="connect-card glass-panel" data-tilt data-hover>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <span class="conn-name">YouTube</span>
+          <span class="conn-handle">@mystik</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">MYSTIK</div>
+      <p class="footer-tagline">Memento Mori — Remember death. Make music that outlives you.</p>
+      <div class="footer-links">
+        <a href="#music">Music</a>
+        <a href="#about">About</a>
+        <a href="#signup">Newsletter</a>
+        <a href="#connect">Connect</a>
+      </div>
+      <div class="footer-copy">© 2024–2026 Mystik. Independent. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

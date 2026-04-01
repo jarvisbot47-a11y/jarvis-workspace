@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Release Calendar - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Release Calendar{% endblock %}
+
+{% block topbar_actions %}
+<button onclick="openModal('add-release')" class="btn btn-primary">+ Schedule Release</button>
+{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Upcoming Releases -->
+    <div class="card">
+        <div class="card-header">
+            <h3>📅 Upcoming / Recent</h3>
+        </div>
+        {% set upcoming = [] %}
+        {% for r in releases %}
+            {% if r.release_date >= today %}
+                {% set _ = upcoming.append(r) %}
+            {% endif %}
+        {% endfor %}
+        {% if upcoming %}
+        {% for r in upcoming[:5] %}
+        <div class="release-item">
+            <div class="release-date">
+                <div class="month">{{ r.release_date[5:7] }}</div>
+                <div class="day">{{ r.release_date[8:10] }}</div>
+            </div>
+            <div class="release-info">
+                <h4>{{ r.title }}</h4>
+                <div class="type">{{ r.release_type or 'Release' }} · <span class="badge badge-{{ r.status }}">{{ r.status }}</span></div>
+                {% if r.notes %}<p style="font-size: 12px; color: var(--text-dim); margin-top: 6px;">{{ r.notes }}</p>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            <p>No upcoming releases scheduled.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- All Releases -->
+    <div class="card">
+        <div class="card-header">
+            <h3>📋 All Releases</h3>
+        </div>
+        {% for r in releases[:10] %}
+        <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+            <div style="text-align: center; min-width: 40px;">
+                <div style="font-size: 11px; color: var(--accent); font-weight: 700;">{{ r.release_date[5:7] }}</div>
+                <div style="font-size: 18px; font-weight: 700;">{{ r.release_date[8:10] }}</div>
+            </div>
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">{{ r.title }}</div>
+                <div style="font-size: 12px; color: var(--text-dim);">{{ r.release_date[:4] }} · {{ r.release_type or 'Release' }}</div>
+            </div>
+            <div style="margin-left: auto;">
+                <span class="badge badge-{{ r.status }}">{{ r.status }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="add-release">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Schedule Release</h3>
+            <button class="modal-close" onclick="closeModal('add-release')">&times;</button>
+        </div>
+        <form action="{{ url_for('release_add') }}" method="post">
+            <div class="form-group">
+                <label>Release Title *</label>
+                <input type="text" name="title" class="form-control" required placeholder="e.g. Memento Mori Vol. 4">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Release Date *</label>
+                    <input type="date" name="release_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select name="release_type" class="form-control">
+                        <option value="Album">Album</option>
+                        <option value="EP">EP</option>
+                        <option value="Single">Single</option>
+                        <option value="Mixtape">Mixtape</option>
+                        <option value="Visual Album">Visual Album</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    <option value="planned">Planned</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="mastered">Mastered</option>
+                    <option value="submitted">Submitted to Distro</option>
+                    <option value="released">Released</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control" placeholder="Promotion plan, features, etc."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Schedule</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

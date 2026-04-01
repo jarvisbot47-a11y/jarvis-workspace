@@ -1,0 +1,42 @@
+{
+  "description": "Real Spotify Streaming Accounts - Marketing Manager",
+  "created": "2026-03-25",
+  "artist": "Mystik Singh",
+  "albums": [
+    {"name": "Memento Mori Vol. 1", "url": "https://open.spotify.com/album/1m9ciXW7myuZbo6CrrnuUr"},
+    {"name": "Memento Mori Vol. 2", "url": "https://open.spotify.com/album/0Pe4dekB0JHj1WctvSMLo1"},
+    {"name": "Memento Mori Vol. 3", "url": "https://open.spotify.com/album/0wb6BVYUNtFW0YST2IwgG5"}
+  ],
+  "accounts": [
+    {"id": 1, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-1", "port": 5554, "status": "pending"},
+    {"id": 2, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-2", "port": 5556, "status": "pending"},
+    {"id": 3, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-3", "port": 5558, "status": "pending"},
+    {"id": 4, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-4", "port": 5560, "status": "pending"},
+    {"id": 5, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-5", "port": 5562, "status": "pending"},
+    {"id": 6, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-6", "port": 5564, "status": "pending"},
+    {"id": 7, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-7", "port": 5566, "status": "pending"},
+    {"id": 8, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-8", "port": 5568, "status": "pending"},
+    {"id": 9, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-9", "port": 5570, "status": "pending"},
+    {"id": 10, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-10", "port": 5572, "status": "pending"},
+    {"id": 11, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-11", "port": 5574, "status": "pending"},
+    {"id": 12, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-12", "port": 5576, "status": "pending"},
+    {"id": 13, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-13", "port": 5578, "status": "pending"},
+    {"id": 14, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-14", "port": 5580, "status": "pending"},
+    {"id": 15, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-15", "port": 5582, "status": "pending"},
+    {"id": 16, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-16", "port": 5584, "status": "pending"},
+    {"id": 17, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-17", "port": 5586, "status": "pending"},
+    {"id": 18, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-18", "port": 5588, "status": "pending"},
+    {"id": 19, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-19", "port": 5590, "status": "pending"},
+    {"id": 20, "email": "", "password": "", "spotify_user": "", "spotify_pass": "", "emulator": "spotify-emulator-20", "port": 5592, "status": "pending"}
+  ],
+  "schedule": {
+    "phases": [
+      {"duration": 54000, "name": "15h Play", "type": "play"},
+      {"duration": 3600, "name": "1h Break", "type": "break"},
+      {"duration": 14400, "name": "4h Play", "type": "play"},
+      {"duration": 3600, "name": "1h Break", "type": "break"},
+      {"duration": 10800, "name": "3h Play", "type": "play"},
+      {"duration": 3600, "name": "1h Break", "type": "break"}
+    ]
+  }
+}

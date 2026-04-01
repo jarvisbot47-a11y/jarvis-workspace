@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}Email Accounts - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Email Accounts{% endblock %}
+
+{% block topbar_actions %}
+<button onclick="openModal('add-account')" class="btn btn-primary">+ Add Account</button>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>📧 Email Sender Accounts</h3>
+        <p style="font-size: 13px; color: var(--text-dim); margin-top: 4px;">
+            Manage multiple email accounts for sending playlist pitches. Rotate accounts to avoid rate limits and spam filters.
+        </p>
+    </div>
+</div>
+
+<div class="grid-2">
+    {% for acc in accounts %}
+    <div class="card" style="border-left: 3px solid {% if acc.status == 'active' %}var(--success){% else %}var(--text-dim){% endif %};">
+        <div class="card-header">
+            <div>
+                <h3 style="font-size: 16px;">{{ acc.display_name }}</h3>
+                <div style="font-size: 13px; color: var(--accent);">{{ acc.email_address }}</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="badge badge-{{ acc.status }}">{{ acc.status }}</span>
+                <span style="font-size: 12px; color: var(--text-dim);">{{ acc.provider }}</span>
+            </div>
+        </div>
+
+        <!-- Usage meter -->
+        <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-bottom: 6px;">
+                <span>Daily Usage</span>
+                <span>{{ acc.daily_used }} / {{ acc.daily_limit }}</span>
+            </div>
+            <div style="background: var(--bg-dark); border-radius: 6px; height: 8px; overflow: hidden;">
+                {% set pct = (acc.daily_used / acc.daily_limit * 100)|int if acc.daily_limit > 0 else 0 %}
+                <div style="width: {{ pct }}%; height: 100%; background: {% if pct > 80 %}var(--danger){% elif pct > 50 %}var(--warning){% else %}var(--success){% endif %}; border-radius: 6px;"></div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; margin-bottom: 16px;">
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">SMTP Host</div>
+                <div>{{ acc.smtp_host or '—' }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Port</div>
+                <div>{{ acc.smtp_port or '—' }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Last Used</div>
+                <div>{{ acc.last_used or 'Never' }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">TLS</div>
+                <div>{% if acc.use_tls %}✅ Enabled{% else %}❌ Disabled{% endif %}</div>
+            </div>
+        </div>
+
+        {% if acc.notes %}
+        <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 16px; padding: 10px; background: var(--bg-dark); border-radius: 6px;">
+            {{ acc.notes }}
+        </p>
+        {% endif %}
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="openModal('edit-account-{{ acc.id }}')" class="btn btn-secondary btn-sm">✏️ Edit</button>
+            <a href="{{ url_for('email_aliases', account_id=acc.id) }}" class="btn btn-secondary btn-sm">🔗 Aliases</a>
+            <button onclick="openModal('test-account-{{ acc.id }}')" class="btn btn-secondary btn-sm">🧪 Test Send</button>
+            <form action="{{ url_for('email_account_delete', account_id=acc.id) }}" method="post" style="display: inline;">
+                <button type="button" onclick="confirmDelete(this.form.action)" class="btn btn-danger btn-sm">🗑️ Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not accounts %}
+<div class="empty-state">
+    <div class="icon">📧</div>
+    <h3>No email accounts yet</h3>
+    <p>Add your first email account to start sending playlist pitches from multiple addresses.</p>
+    <button onclick="openModal('add-account')" class="btn btn-primary">Add First Account</button>
+</div>
+{% endif %}
+
+<!-- Quick Tips -->
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3>💡 Best Practices</h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; font-size: 13px;">
+        <div>
+            <h4 style="font-size: 14px; margin-bottom: 6px;">Avoid Spam Filters</h4>
+            <p style="color: var(--text-dim);">Warm up new accounts slowly. Send 5-10 emails/day for the first week before ramping up.</p>
+        </div>
+        <div>
+            <h4 style="font-size: 14px; margin-bottom: 6px;">Rate Limits</h4>
+            <p style="color: var(--text-dim);">Gmail: ~50/day. Outlook: ~40/day. Use multiple accounts for larger campaigns.</p>
+        </div>
+        <div>
+            <h4 style="font-size: 14px; margin-bottom: 6px;">Track Deliverability</h4>
+            <p style="color: var(--text-dim);">Set daily limits per account and rotate accounts. Monitor bounce rates and spam complaints.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Add Account Modal -->
+<div class="modal-overlay" id="add-account">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Email Account</h3>
+            <button class="modal-close" onclick="closeModal('add-account')">&times;</button>
+        </div>
+        <form action="{{ url_for('email_account_add') }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" name="email_address" class="form-control" required placeholder="your.email@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" name="display_name" class="form-control" placeholder="Artist Name">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Provider</label>
+                    <select name="provider" class="form-control">
+                        <option value="gmail">Gmail / Google Workspace</option>
+                        <option value="outlook">Outlook / Hotmail</option>
+                        <option value="yahoo">Yahoo Mail</option>
+                        <option value="custom">Custom SMTP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>SMTP Host</label>
+                    <input type="text" name="smtp_host" class="form-control" placeholder="smtp.gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>SMTP Port</label>
+                    <input type="number" name="smtp_port" class="form-control" value="587">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>SMTP Username</label>
+                    <input type="text" name="smtp_username" class="form-control" placeholder="same as email or app password">
+                </div>
+                <div class="form-group">
+                    <label>SMTP Password / App Password</label>
+                    <input type="password" name="smtp_password" class="form-control" placeholder="App password (not login password)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Daily Sending Limit</label>
+                <input type="number" name="daily_limit" class="form-control" value="50" placeholder="Recommended: 30-50 for Gmail">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="use_tls" value="1" checked style="margin-right: 8px;">Use TLS (recommended)
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control" placeholder="Account purpose, any issues, etc."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Add Account</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Account Modals (dynamically shown) -->
+{% for acc in accounts %}
+<div class="modal-overlay" id="edit-account-{{ acc.id }}">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Edit: {{ acc.email_address }}</h3>
+            <button class="modal-close" onclick="closeModal('edit-account-{{ acc.id }}')">&times;</button>
+        </div>
+        <form action="{{ url_for('email_account_edit', account_id=acc.id) }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email_address" value="{{ acc.email_address }}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" name="display_name" value="{{ acc.display_name or '' }}" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Provider</label>
+                    <select name="provider" class="form-control">
+                        {% for p in ['gmail','outlook','yahoo','custom'] %}
+                        <option value="{{ p }}" {% if acc.provider == p %}selected{% endif %}>{{ p|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option value="active" {% if acc.status=='active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if acc.status=='inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="suspended" {% if acc.status=='suspended' %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>SMTP Host</label>
+                    <input type="text" name="smtp_host" value="{{ acc.smtp_host or '' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>SMTP Port</label>
+                    <input type="number" name="smtp_port" value="{{ acc.smtp_port }}" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>SMTP Username</label>
+                    <input type="text" name="smtp_username" value="{{ acc.smtp_username or '' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>New Password (leave blank to keep current)</label>
+                    <input type="password" name="smtp_password" class="form-control" placeholder="Enter only to change">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Daily Limit</label>
+                    <input type="number" name="daily_limit" value="{{ acc.daily_limit }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Reset Daily Count</label>
+                    <button type="button" onclick="fetch('/api/reset-email-count/{{ acc.id }}', {method:'POST'}).then(()=>location.reload())" class="btn btn-secondary" style="width: 100%;">Reset to 0</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control">{{ acc.notes or '' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<!-- Test Send Modal -->
+<div class="modal-overlay" id="test-account-{{ acc.id }}">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Test Send: {{ acc.email_address }}</h3>
+            <button class="modal-close" onclick="closeModal('test-account-{{ acc.id }}')">&times;</button>
+        </div>
+        <form action="#" method="post" onsubmit="event.preventDefault(); alert('Email sending requires SMTP configuration. Set up your email credentials in Email Accounts.');">
+            <input type="hidden" name="account_id" value="{{ acc.id }}">
+            <div class="form-group">
+                <label>To Email</label>
+                <input type="email" name="test_email" class="form-control" required placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" name="subject" class="form-control" value="Test from Promotion HQ">
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea name="body" class="form-control" rows="4">This is a test email sent from Promotion HQ. If you receive this, your email account is configured correctly!</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">🧪 Send Test Email</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

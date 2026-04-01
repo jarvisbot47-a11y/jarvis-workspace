@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Curator: {{ curator.name }} - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}{{ curator.name }}{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Curator Info -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Curator Details</h3>
+            <button class="btn btn-secondary btn-sm" onclick="openModal('edit-curator')">Edit</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Playlist</div>
+                <div style="font-weight: 600;">{{ curator.playlist_name }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Platform</div>
+                <div style="font-weight: 600;">{{ curator.platform }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Genre</div>
+                <div style="font-weight: 600;">{{ curator.genre_focus or '—' }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Followers</div>
+                <div style="font-weight: 600;">{{ curator.follower_count if curator.follower_count else '—' }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Response Rate</div>
+                <div style="font-weight: 600;">{{ curator.response_rate }}%</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Rating</div>
+                <div class="stars">{{ '★' * (curator.rating|int) }}{{ '☆' * (5 - (curator.rating|int)) }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Last Contacted</div>
+                <div style="font-weight: 600;">{{ curator.last_contacted or 'Never' }}</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Source</div>
+                <div style="font-weight: 600;">{{ curator.source or '—' }}</div>
+            </div>
+        </div>
+        {% if curator.notes %}
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Notes</div>
+            <p style="font-size: 13px; line-height: 1.6;">{{ curator.notes }}</p>
+        </div>
+        {% endif %}
+        <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+            {% if curator.playlist_url %}<a href="{{ curator.playlist_url }}" target="_blank" class="btn btn-secondary btn-sm">🔗 Playlist</a>{% endif %}
+            {% if curator.email %}<a href="mailto:{{ curator.email }}" class="btn btn-secondary btn-sm">✉️ Email</a>{% endif %}
+            {% if curator.website %}<a href="{{ curator.website }}" target="_blank" class="btn btn-secondary btn-sm">🌐 Website</a>{% endif %}
+            {% if curator.instagram %}<a href="https://instagram.com/{{ curator.instagram|replace('@','') }}" target="_blank" class="btn btn-secondary btn-sm">📸 Instagram</a>{% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Pitch -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Quick Pitch</h3>
+        </div>
+        <form action="{{ url_for('submission_add') }}" method="post">
+            <input type="hidden" name="curator_id" value="{{ curator.id }}">
+            <div class="form-group">
+                <label>Track / Album</label>
+                <select name="album_id" class="form-control" required>
+                    <option value="">Select an album...</option>
+                    <option value="1">Memento Mori Vol. 1 (2022)</option>
+                    <option value="2">Memento Mori Vol. 2 (2023)</option>
+                    <option value="3">Memento Mori Vol. 3 (2024)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Priority</label>
+                <select name="priority" class="form-control">
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control" placeholder="Personalize this pitch..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Template (optional)</label>
+                <select class="form-control" onchange="document.getElementById('pitch-subject-preview').textContent = this.options[this.selectedIndex].dataset.subject || ''">
+                    <option value="">— Use custom notes above —</option>
+                    <option value="standard" data-subject="New Track: [Title] by Mystik Singh">Standard Pitch</option>
+                    <option value="short" data-subject="[Title] – Mystik Singh (Submission)">Quick Pitch</option>
+                    <option value="conscious" data-subject="Lyrically-Driven Hip Hop: [Title] for [Playlist]">Conscious Hip Hop</option>
+                    <option value="aggressive" data-subject="[Title] – Heavy 808s for [Playlist]">Hard-Hitting / Trap</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">📨 Log Submission</button>
+        </form>
+    </div>
+</div>
+
+<!-- Submission History -->
+<div class="card">
+    <div class="card-header">
+        <h3>Submission History</h3>
+    </div>
+    {% if submissions %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Track</th>
+                    <th>Status</th>
+                    <th>Email Sent</th>
+                    <th>Response</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in submissions %}
+                <tr>
+                    <td>{{ sub.track_title or sub.album_title or '—' }}</td>
+                    <td>
+                        {% if sub.status == 'approved' %}
+                        <span class="badge badge-approved">✓ Approved</span>
+                        {% elif sub.status == 'rejected' %}
+                        <span class="badge badge-rejected">✗ Rejected</span>
+                        {% elif sub.status == 'pending' %}
+                        <span class="badge badge-pending">○ Pending</span>
+                        {% else %}
+                        <span class="badge badge-noresponse">— {{ sub.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{% if sub.email_sent %}✅ {{ sub.email_sent_at[:10] if sub.email_sent_at else '' }}{% else %}❌{% endif %}</td>
+                    <td>{{ sub.response_status or '—' }}</td>
+                    <td style="color: var(--text-dim); font-size: 12px;">{{ sub.created_at[:10] }}</td>
+                    <td>
+                        <form action="{{ url_for('submission_delete', sub_id=sub.id) }}" method="post" style="display: inline;">
+                            <button type="button" onclick="confirmDelete(this.form.action)" class="btn btn-danger btn-xs">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No submissions to this curator yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="edit-curator">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Edit Curator</h3>
+            <button class="modal-close" onclick="closeModal('edit-curator')">&times;</button>
+        </div>
+        <form action="{{ url_for('curator_edit', curator_id=curator.id) }}" method="post">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" name="name" value="{{ curator.name }}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Playlist Name</label>
+                    <input type="text" name="playlist_name" value="{{ curator.playlist_name }}" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select name="platform" class="form-control">
+                        {% for p in ['Spotify','Apple Music','SoundCloud','YouTube','Tidal','Deezer','Qobuz'] %}
+                        <option value="{{ p }}" {% if curator.platform == p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option value="active" {% if curator.status=='active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if curator.status=='inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="banned" {% if curator.status=='banned' %}selected{% endif %}>Banned</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Followers</label>
+                    <input type="number" name="follower_count" value="{{ curator.follower_count }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Rating</label>
+                    <select name="rating" class="form-control">
+                        {% for i in range(1,6) %}
+                        <option value="{{ i }}" {% if curator.rating == i %}selected{% endif %}>{{ '★' * i }}{{ '☆' * (5-i) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" class="form-control">{{ curator.notes or '' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Send Pitch Email - Promotion HQ{% endblock %}
+{% block page_title %}Send Pitch Email{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>✉️ Compose & Send Pitch</h3>
+    </div>
+    <form action="{{ url_for('email_compose') }}" method="post">
+        <div class="form-row">
+            <div class="form-group">
+                <label>From Account *</label>
+                <select name="email_account_id" class="form-control" required>
+                    <option value="">Select email account...</option>
+                    {% for acc in accounts %}
+                    <option value="{{ acc.id }}">{{ acc.display_name }} &lt;{{ acc.email_address }}&gt; ({{ acc.daily_used }}/{{ acc.daily_limit }} used today)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Curator (optional)</label>
+                <select name="curator_lookup" class="form-control" onchange="fillCuratorEmail()">
+                    <option value="">Select curator...</option>
+                    {% for c in curators %}
+                    <option value="{{ c.id }}" data-email="{{ c.email or '' }}">{{ c.name }} — {{ c.playlist_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>To Email *</label>
+            <input type="email" name="to_email" id="to-email" class="form-control" required placeholder="curator@email.com">
+        </div>
+        <div class="form-group">
+            <label>Subject *</label>
+            <input type="text" name="subject" class="form-control" required placeholder="Email subject line...">
+        </div>
+        <div class="form-group">
+            <label>Email Body *</label>
+            <textarea name="body" class="form-control" style="min-height: 300px; font-family: monospace;" required placeholder="Write your pitch here..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Link to Submission (optional)</label>
+            <input type="number" name="submission_id" class="form-control" placeholder="Submission ID to mark as emailed">
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">✉️ Send Email</button>
+            <button type="button" class="btn btn-secondary" onclick="copyEmail()">📋 Copy to Clipboard</button>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3>💡 Tips for Good Email Deliverability</h3>
+    </div>
+    <div style="font-size: 13px; color: var(--text-dim); line-height: 1.8;">
+        <p>• <strong>Personalize</strong> the subject and first line — mention the curator's playlist by name</p>
+        <p>• <strong>Keep it short</strong> — curators get hundreds of emails, aim for 100-150 words max</p>
+        <p>• <strong>Include streaming links</strong> — Spotify/Apple Music links make it easy for curators to listen</p>
+        <p>• <strong>Don't sound desperate</strong> — professional tone, not "please please please add my song"</p>
+        <p>• <strong>Warm up new accounts</strong> — send 5-10/day for the first week before scaling up</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function fillCuratorEmail() {
+    const sel = document.querySelector('[name="curator_lookup"]');
+    const opt = sel.options[sel.selectedIndex];
+    const email = opt.dataset.email;
+    if (email) {
+        document.getElementById('to-email').value = email;
+    }
+}
+
+function copyEmail() {
+    const subject = document.querySelector('[name="subject"]').value;
+    const body = document.querySelector('[name="body"]').value;
+    const text = 'Subject: ' + subject + '\n\n' + body;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Email copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}

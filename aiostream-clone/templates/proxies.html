@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Proxy Manager - Marketing Manager{% endblock %}
+{% block page_title %}🌐 Proxy Manager{% endblock %}
+{% block topbar_actions %}
+<div>
+                <button class="btn btn-secondary" onclick="openModal('addProxyModal')">+ Add Proxy</button>
+                <form action="/proxies/check-all" method="POST" style="display:inline;"><button class="btn btn-secondary" type="submit">🔄 Check All Health</button></form>
+            </div>
+{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244, 67, 54, 0.1); color: var(--danger); border: 1px solid rgba(244, 67, 54, 0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-healthy { background: rgba(76,175,80,0.15); color: var(--success); }
+        .badge-dead { background: rgba(244,67,54,0.15); color: var(--danger); }
+        .badge-unknown { background: rgba(128,128,128,0.15); color: var(--text-dim); }
+        .badge-error { background: rgba(255,152,0,0.15); color: var(--warning); }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 560px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .filters-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+        .filters-bar select, .filters-bar input { padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; }
+        .geo-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-dim); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .stat-card .stat-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 700; }
+    
+    </style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar">
+            <h2>🌐 Proxy Manager</h2>
+            <div>
+                <button class="btn btn-secondary" onclick="openModal('addProxyModal')">+ Add Proxy</button>
+                <form action="/proxies/check-all" method="POST" style="display:inline;"><button class="btn btn-secondary" type="submit">🔄 Check All Health</button></form>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Total Proxies</div><div class="stat-value">{{ proxies|length }}</div></div>
+                <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" style="color:var(--success)">{{ proxies|selectattr('is_active')|list|length }}</div></div>
+                <div class="stat-card"><div class="stat-label">Healthy</div><div class="stat-value" style="color:var(--success)">{{ proxies|selectattr('health_status','equalto','healthy')|list|length }}</div></div>
+                <div class="stat-card"><div class="stat-label">Dead / Error</div><div class="stat-value" style="color:var(--danger)">{{ (proxies|selectattr('health_status','equalto','dead')|list|length) + (proxies|selectattr('health_status','equalto','error')|list|length) }}</div></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Proxy List</h3></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Proxy String</th><th>Type</th><th>Location</th><th>ISP</th><th>Health</th><th>Success</th><th>Fail</th><th>Avg Response</th><th>Last Used</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        {% for p in proxies %}
+                        <tr>
+                            <td><code style="font-size:12px; color:var(--accent)">{{ p.proxy_string[:50] }}{% if p.proxy_string|length > 50 %}...{% endif %}</code></td>
+                            <td>{{ p.proxy_type or 'http' }}</td>
+                            <td><span class="geo-tag">📍 {{ p.city or 'Unknown' }}, {{ p.country or 'Unknown' }}</span></td>
+                            <td>{{ p.isp or '-' }}</td>
+                            <td><span class="badge badge-{{ p.health_status or 'unknown' }}">{{ p.health_status or 'unknown' }}</span></td>
+                            <td style="color:var(--success)">{{ p.success_count or 0 }}</td>
+                            <td style="color:var(--danger)">{{ p.fail_count or 0 }}</td>
+                            <td>{% if p.avg_response_ms %}{{ p.avg_response_ms }}ms{% else %}—{% endif %}</td>
+                            <td>{% if p.last_used %}{{ p.last_used[:10] }}{% else %}Never{% endif %}</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" onclick="editProxy({{ p }})">✏️</button>
+                                <form action="/proxies/{{ p.id }}/check" method="POST" style="display:inline;"><button class="btn btn-sm btn-secondary" type="submit">🔄</button></form>
+                                <form action="/proxies/{{ p.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this proxy?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-dim)">No proxies added yet. Add your first proxy above.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editProxy(p) {
+            document.getElementById('edit_proxy_string').value = p.proxy_string || '';
+            document.getElementById('edit_proxy_type').value = p.proxy_type || 'http';
+            document.getElementById('edit_rotation_strategy').value = p.rotation_strategy || 'sequential';
+            document.getElementById('edit_country').value = p.country || '';
+            document.getElementById('edit_city').value = p.city || '';
+            document.getElementById('edit_isp').value = p.isp || '';
+            document.getElementById('edit_is_active').value = p.is_active ? '1' : '0';
+            document.getElementById('edit_notes').value = p.notes || '';
+            document.getElementById('editProxyForm').action = '/proxies/' + p.id + '/edit';
+            openModal('editProxyModal');
+        }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>{% endblock %}

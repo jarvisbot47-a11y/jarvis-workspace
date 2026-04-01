@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Post Scheduler - Marketing Manager{% endblock %}
+{% block page_title %}Post Scheduler{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;">
+    <button class="btn btn-primary" onclick="openModal('modal-new-post')">+ Schedule Post</button>
+    <a href="{{ url_for('upload_post') }}" class="btn btn-secondary" style="background:var(--accent);color:#fff;border-color:var(--accent);">📤 Upload-Post</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label">Scheduled</div>
+        <div class="stat-value" style="color:var(--warning);">{{ stats.scheduled or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Posted</div>
+        <div class="stat-value" style="color:var(--success);">{{ stats.posted or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value" style="color:var(--danger);">{{ stats.failed or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value">{{ stats.today or 0 }}</div>
+    </div>
+</div>
+
+<div class="filters-bar">
+    <select onchange="filterByPlatform(this.value)">
+        <option value="">All Platforms</option>
+        <option value="instagram">Instagram</option>
+        <option value="tiktok">TikTok</option>
+        <option value="youtube">YouTube</option>
+        <option value="facebook">Facebook</option>
+    </select>
+    <select onchange="filterByStatus(this.value)">
+        <option value="">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="posted">Posted</option>
+        <option value="failed">Failed</option>
+        <option value="draft">Draft</option>
+    </select>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Scheduled Posts</h3>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-sm btn-secondary" onclick="processQueue()">Process Queue Now</button>
+        </div>
+    </div>
+    {% if posts %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Platform</th>
+                    <th>Content</th>
+                    <th>Caption</th>
+                    <th>Scheduled</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr>
+                    <td>
+                        <span class="platform-badge">{{ post.platform }}</span>
+                    </td>
+                    <td>
+                        {% if post.content_path %}
+                        <span style="font-size:12px;color:var(--text-dim);">{{ post.content_path | truncate(30, true) }}</span>
+                        {% else %}
+                        <span style="color:var(--text-dim);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width:200px;">
+                        <span style="font-size:12px;">{{ post.caption | truncate(60, true) if post.caption else '—' }}</span>
+                    </td>
+                    <td>
+                        {% if post.scheduled_time %}
+                        <span style="font-size:12px;">{{ post.scheduled_time }}</span>
+                        {% else %}
+                        <span style="color:var(--text-dim);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if post.status == 'pending' %}
+                        <span class="badge badge-pending">Pending</span>
+                        {% elif post.status == 'posted' %}
+                        <span class="badge badge-active">✓ Posted</span>
+                        {% elif post.status == 'failed' %}
+                        <span class="badge badge-rejected">Failed</span>
+                        {% elif post.status == 'draft' %}
+                        <span class="badge badge-noresponse">Draft</span>
+                        {% else %}
+                        <span class="badge badge-{{ post.status }}">{{ post.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            {% if post.status == 'pending' %}
+                            <button class="btn btn-sm btn-success" onclick="postNow({{ post.id }})">Post Now</button>
+                            {% endif %}
+                            {% if post.post_url %}
+                            <a href="{{ post.post_url }}" target="_blank" class="btn btn-sm btn-secondary">View</a>
+                            {% endif %}
+                            <form action="/scheduled-post/{{ post.id }}/delete" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Del</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-dim);padding:40px;text-align:center;">
+        No scheduled posts. Queue content for automatic posting.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Best Times to Post -->
+<div class="card">
+    <div class="card-header">
+        <h3>Optimal Posting Times</h3>
+    </div>
+    <div class="grid-4" style="gap:15px;">
+        <div style="text-align:center;padding:15px;background:var(--bg-dark);border-radius:8px;">
+            <div style="font-size:20px;font-weight:700;color:var(--accent);">9:00 AM</div>
+            <div style="font-size:11px;color:var(--text-dim);">Instagram</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:var(--bg-dark);border-radius:8px;">
+            <div style="font-size:20px;font-weight:700;color:var(--accent);">12:00 PM</div>
+            <div style="font-size:11px;color:var(--text-dim);">TikTok</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:var(--bg-dark);border-radius:8px;">
+            <div style="font-size:20px;font-weight:700;color:var(--accent);">5:00 PM</div>
+            <div style="font-size:11px;color:var(--text-dim);">YouTube</div>
+        </div>
+        <div style="text-align:center;padding:15px;background:var(--bg-dark);border-radius:8px;">
+            <div style="font-size:20px;font-weight:700;color:var(--accent);">7:30 PM</div>
+            <div style="font-size:11px;color:var(--text-dim);">Facebook</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="modal-overlay" id="modal-new-post">
+    <div class="modal" style="max-width:600px;">
+        <div class="modal-header">
+            <h3>Schedule a Post</h3>
+            <button class="modal-close" onclick="closeModal('modal-new-post')">&times;</button>
+        </div>
+        <form action="/scheduled-post/add" method="POST" enctype="multipart/form-data">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select name="platform" class="form-control" required>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="facebook">Facebook</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option value="pending">Scheduled</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Upload Content</label>
+                <input type="file" name="content_file" class="form-control" accept="video/*,image/*">
+                <small style="color:var(--text-dim);font-size:11px;">Video or image (JPG/PNG/MP4/MOV)</small>
+            </div>
+
+            <div class="form-group">
+                <label>Caption / Description</label>
+                <textarea name="caption" class="form-control" rows="4" placeholder="New single out now! 🎵 Link in bio... #music #newrelease"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="schedule_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" name="schedule_time" class="form-control" required>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-post')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Schedule Post</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function postNow(postId) {
+    if (!confirm('Post this now?')) return;
+    try {
+        const resp = await fetch(`/scheduled-post/${postId}/post`, {method: 'POST'});
+        const result = await resp.json();
+        if (result.success) {
+            alert('Posted! URL: ' + (result.post_url || 'N/A'));
+            location.reload();
+        } else {
+            alert('Failed: ' + result.error);
+        }
+    } catch(e) {
+        alert('Error: ' + e);
+    }
+}
+
+async function processQueue() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    try {
+        const resp = await fetch('/scheduler/process-queue', {method: 'POST'});
+        const result = await resp.json();
+        alert(`Processed ${result.processed} posts`);
+        location.reload();
+    } catch(e) {
+        alert('Error: ' + e);
+    }
+    btn.disabled = false;
+    btn.textContent = 'Process Queue Now';
+}
+
+function filterByPlatform(platform) {
+    const url = new URL(location);
+    if (platform) url.searchParams.set('platform', platform);
+    else url.searchParams.delete('platform');
+    location.href = url.toString();
+}
+
+function filterByStatus(status) {
+    const url = new URL(location);
+    if (status) url.searchParams.set('status', status);
+    else url.searchParams.delete('status');
+    location.href = url.toString();
+}
+
+// Set default date to today
+document.querySelector('input[name="schedule_date"]').valueAsDate = new Date();
+</script>
+{% endblock %}

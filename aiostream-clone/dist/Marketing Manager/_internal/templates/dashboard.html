@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Submissions</div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-sub">All time pitches</div>
+    </div>
+    <div class="stat-card accent">
+        <div class="stat-label">Response Rate</div>
+        <div class="stat-value">{{ stats.response_rate }}%</div>
+        <div class="stat-sub">Curators who replied</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Approved</div>
+        <div class="stat-value">{{ stats.approved }}</div>
+        <div class="stat-sub">Playlist placements</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Curators</div>
+        <div class="stat-value">{{ stats.total_curators }}</div>
+        <div class="stat-sub">In database</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Recent Submissions -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Submissions</h3>
+            <a href="{{ url_for('submissions') }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        {% if stats.recent %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Curator</th>
+                        <th>Track</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in stats.recent[:8] %}
+                    <tr>
+                        <td>
+                            <strong>{{ sub.curator_name }}</strong><br>
+                            <span style="color: var(--text-dim); font-size: 12px;">{{ sub.playlist_name }}</span>
+                        </td>
+                        <td>{{ sub.track_title or '—' }}</td>
+                        <td>
+                            {% if sub.status == 'approved' %}
+                            <span class="badge badge-approved">✓ Approved</span>
+                            {% elif sub.status == 'rejected' %}
+                            <span class="badge badge-rejected">✗ Rejected</span>
+                            {% elif sub.status == 'pending' %}
+                            <span class="badge badge-pending">○ Pending</span>
+                            {% else %}
+                            <span class="badge badge-noresponse">— No Response</span>
+                            {% endif %}
+                        </td>
+                        <td style="color: var(--text-dim); font-size: 12px;">{{ sub.created_at[:10] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">📨</div>
+            <h3>No submissions yet</h3>
+            <p>Start pitching to curators from the Submissions page.</p>
+            <a href="{{ url_for('submissions') }}" class="btn btn-primary">Log First Submission</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Follow-ups Due -->
+    <div class="card">
+        <div class="card-header">
+            <h3>⚠️ Follow-ups Due</h3>
+        </div>
+        {% if stats.follow_ups_due %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Curator</th>
+                        <th>Track</th>
+                        <th>Priority</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in stats.follow_ups_due[:8] %}
+                    <tr>
+                        <td>
+                            <strong>{{ sub.curator_name }}</strong><br>
+                            <span style="color: var(--text-dim); font-size: 12px;">{{ sub.email }}</span>
+                        </td>
+                        <td>{{ sub.track_title or '—' }}</td>
+                        <td>
+                            {% if sub.priority == 'high' %}
+                            <span style="color: var(--danger); font-size: 12px; font-weight: 700;">HIGH</span>
+                            {% else %}
+                            <span style="color: var(--text-dim);">Normal</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('compose') }}" class="btn btn-primary btn-xs">Send Follow-up</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">✅</div>
+            <h3>All caught up!</h3>
+            <p>No follow-ups due right now.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Stats Breakdown -->
+<div class="card">
+    <div class="card-header">
+        <h3>Submission Breakdown</h3>
+    </div>
+    <div style="display: flex; gap: 32px; flex-wrap: wrap; padding: 8px 0;">
+        <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: 700; color: var(--warning);">{{ stats.pending }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Pending</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: 700; color: var(--success);">{{ stats.approved }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Approved</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: 700; color: var(--danger);">{{ stats.rejected }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Rejected</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: 700; color: var(--info);">{{ stats.no_response }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">No Response</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 36px; font-weight: 700; color: var(--accent);">{{ stats.response_rate }}%</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Response Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        <h3>🚀 Quick Actions</h3>
+    </div>
+    <div class="quick-actions">
+        <a href="{{ url_for('compose') }}" class="btn btn-primary">✉️ New Pitch</a>
+        <a href="{{ url_for('curators') }}" class="btn btn-secondary">👥 Add Curator</a>
+        <a href="{{ url_for('submissions') }}" class="btn btn-secondary">📨 Log Submission</a>
+        <a href="{{ url_for('releases') }}" class="btn btn-secondary">📅 Schedule Release</a>
+        <a href="{{ url_for('export') }}" class="btn btn-secondary">💾 Backup Data</a>
+    </div>
+</div>
+{% endblock %}

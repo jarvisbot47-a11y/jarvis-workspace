@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}AI Playlists - Marketing Manager{% endblock %}
+{% block page_title %}🤖 AI Playlist Creator{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .playlist-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .playlist-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .playlist-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; margin-top: 8px; }
+        .info-box { background: var(--bg-card-hover); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+        .info-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
+        .info-box ul { list-style: none; padding: 0; }
+        .info-box ul li { padding: 6px 0; font-size: 13px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+        .info-box ul li:last-child { border-bottom: none; }
+    
+    </style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>🤖 AI Playlist Creator</h2></div>
+        <div class="page-content">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><h3>✨ Generate AI Playlist</h3></div>
+                    <form id="aiGenerateForm">
+                        <div class="form-group"><label>Playlist Name</label><input class="form-control" name="name" id="ai_name" placeholder="Mystik Singh - Chill Vibes Mix" value="Mystik Singh - "></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Genre</label><select class="form-control" name="genre" id="ai_genre"><option value="Hip Hop">Hip Hop</option><option value="Trap">Trap</option><option value="Boom Bap">Boom Bap</option><option value="Conscious Hip Hop">Conscious Hip Hop</option><option value="R&B">R&B</option><option value="Pop">Pop</option><option value="Lo-fi">Lo-fi</option></select></div>
+                            <div class="form-group"><label>Mood</label><select class="form-control" name="mood" id="ai_mood"><option value="Chill">Chill</option><option value="Energetic">Energetic</option><option value="Dark">Dark</option><option value="Happy">Happy</option><option value="Melancholic">Melancholic</option><option value="Aggressive">Aggressive</option></select></div>
+                        </div>
+                        <div class="form-group"><label>Platform</label><select class="form-control" name="platform" id="ai_platform"><option value="Spotify">Spotify</option><option value="Apple Music">Apple Music</option><option value="YouTube Music">YouTube Music</option><option value="SoundCloud">SoundCloud</option><option value="Qobuz">Qobuz</option></select></div>
+                        <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px;">
+                            <p style="font-size:12px; color:var(--text-dim); margin:0;">🤖 In production, this connects to OpenAI's API to generate track recommendations based on your genre, mood, and Mystik Singh's discography. The playlist will auto-include Mystik Singh's tracks.</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%" id="generateBtn">🤖 Generate Playlist with AI</button>
+                    </form>
+                    <div id="generateResult" style="margin-top:16px; display:none; padding:12px; border-radius:8px;"></div>
+                </div>
+                <div>
+                    <div class="info-box" style="margin-bottom:24px;">
+                        <h4>🎯 How It Works</h4>
+                        <ul>
+                            <li>📝 Select genre and mood preferences</li>
+                            <li>🤖 AI analyzes Mystik Singh's discography</li>
+                            <li>🎵 Auto-includes Mystik Singh's tracks</li>
+                            <li>📋 Generates curated playlist tracklist</li>
+                            <li>🔗 Outputs shareable playlist links</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h4>🎵 Example Playlists</h4>
+                        <ul>
+                            <li>🎧 "Mystik Singh - Late Night Study Mix" (Lo-fi Hip Hop, Chill)</li>
+                            <li>🔥 "Mystik Singh - Gym Mode" (Trap, Energetic)</li>
+                            <li>🌙 "Mystik Singh - Midnight Reflection" (Conscious Hip Hop, Dark)</li>
+                            <li>☀️ "Mystik Singh - Summer Vibes" (Hip Hop, Happy)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>📋 Generated Playlists</h3></div>
+                {% for p in playlists %}
+                <div class="playlist-card">
+                    <h4>🎵 {{ p.playlist_name }}</h4>
+                    <div style="font-size:13px; color:var(--text-dim);">{{ p.description or 'No description' }}</div>
+                    <div class="playlist-meta">
+                        <span>🏷️ {{ p.genre or '-' }}</span>
+                        <span>🎭 {{ p.mood or '-' }}</span>
+                        <span>📱 {{ p.platform or 'Spotify' }}</span>
+                        <span>🤖 {{ p.generated_with or 'openai' }}</span>
+                        <span>📅 {{ p.created_at[:10] if p.created_at else '-' }}</span>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <form action="/ai-playlists/{{ p.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align:center; padding:40px; color:var(--text-dim)">No AI playlists generated yet. Use the form to create your first one.</div>
+                {% endfor %}
+            </div>
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+document.getElementById('aiGenerateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating...';
+            const res = await fetch('/ai-playlists/generate', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: document.getElementById('ai_name').value,
+                    genre: document.getElementById('ai_genre').value,
+                    mood: document.getElementById('ai_mood').value,
+                    platform: document.getElementById('ai_platform').value
+                })
+            });
+            const result = await res.json();
+            const div = document.getElementById('generateResult');
+            div.style.display = 'block';
+            if(result.success) {
+                div.style.background = 'rgba(76,175,80,0.15)';
+                div.style.color = 'var(--success)';
+                div.innerHTML = `✅ ${result.message}<br><br>🎵 Playlist ID: ${result.playlist_id}<br>🔗 In production, this would return shareable links from Spotify/Apple Music.`;
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                div.style.background = 'rgba(244,67,54,0.15)';
+                div.style.color = 'var(--danger)';
+                div.textContent = 'Error: ' + (result.message || 'Unknown error');
+            }
+            btn.disabled = false;
+            btn.textContent = '🤖 Generate Playlist with AI';
+        });
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>{% endblock %}

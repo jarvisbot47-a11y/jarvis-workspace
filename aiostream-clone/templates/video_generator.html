@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="glass-card" style="padding: 2rem;">
+    <h2>🎬 AI Video Generator</h2>
+    
+    <!-- Model Selection -->
+    <div style="margin: 1.5rem 0;">
+        <label style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Model</label>
+        <select id="model-select" style="width: 100%; padding: 0.75rem; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text);">
+            <option value="kling-standard-v1">Kling Standard (5s)</option>
+            <option value="kling-pro-v1">Kling Pro (5s)</option>
+            <option value="kling-standard-v1/t2v">Kling Standard T2V</option>
+            <option value="kling-pro-v1/t2v">Kling Pro T2V</option>
+        </select>
+    </div>
+    
+    <!-- Prompt -->
+    <div style="margin: 1.5rem 0;">
+        <label style="color: var(--text-dim); font-size: 0.85rem;">Prompt *</label>
+        <textarea id="prompt" rows="4" style="width: 100%; padding: 0.75rem; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text); resize: vertical;" placeholder="Describe the video you want to generate..."></textarea>
+    </div>
+    
+    <!-- Aspect Ratio -->
+    <div style="margin: 1.5rem 0;">
+        <label style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Aspect Ratio</label>
+        <div style="display: flex; gap: 1rem;">
+            <label><input type="radio" name="ratio" value="16:9" checked> 16:9</label>
+            <label><input type="radio" name="ratio" value="9:16"> 9:16</label>
+            <label><input type="radio" name="ratio" value="1:1"> 1:1</label>
+        </div>
+    </div>
+    
+    <!-- Duration -->
+    <div style="margin: 1.5rem 0;">
+        <label style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Duration</label>
+        <select id="duration" style="padding: 0.75rem; border-radius: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text);">
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds (Pro)</option>
+        </select>
+    </div>
+    
+    <!-- Generate Button -->
+    <button id="generate-btn" class="btn-primary" style="padding: 1rem 2rem; font-size: 1rem; margin-top: 1rem;">
+        🎬 Generate Video
+    </button>
+    
+    <!-- Status -->
+    <div id="status" style="margin-top: 1.5rem; display: none;">
+        <div class="glass-card" style="padding: 1rem;">
+            <p id="status-text">Generating...</p>
+            <div style="background: var(--glass-bg); border-radius: 8px; height: 6px; margin-top: 0.5rem;">
+                <div id="progress-bar" style="background: linear-gradient(90deg, var(--accent), var(--accent2)); height: 100%; width: 0%; border-radius: 8px; transition: width 0.3s;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Result -->
+    <div id="result" style="margin-top: 1.5rem; display: none;">
+        <div class="glass-card" style="padding: 1rem;">
+            <h3>✅ Video Ready!</h3>
+            <video id="video-preview" controls style="width: 100%; border-radius: 12px; margin-top: 1rem;"></video>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <a id="download-btn" href="#" class="btn-primary" download>⬇ Download</a>
+                <button id="send-to-upload" class="btn-secondary">📤 Send to Upload Post</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Error -->
+    <div id="error" style="margin-top: 1.5rem; display: none;">
+        <div class="glass-card" style="padding: 1rem; border-color: #ff6b6b;">
+            <p id="error-text" style="color: #ff6b6b;"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('generate-btn').addEventListener('click', async () => {
+    const model = document.getElementById('model-select').value;
+    const prompt = document.getElementById('prompt').value;
+    const ratio = document.querySelector('input[name="ratio"]:checked').value;
+    const duration = document.getElementById('duration').value;
+    
+    if (!prompt) { alert('Please enter a prompt'); return; }
+    
+    document.getElementById('status').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    document.getElementById('status-text').textContent = 'Submitting job...';
+    document.getElementById('generate-btn').disabled = true;
+    
+    try {
+        // Submit generation
+        const resp = await fetch('/video-generator/generate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ model, prompt, ratio, duration })
+        });
+        const data = await resp.json();
+        
+        if (data.error) throw new Error(data.error);
+        
+        const jobId = data.job_id || data.id;
+        document.getElementById('status-text').textContent = 'Generating... this may take 1-2 minutes';
+        
+        // Poll for completion
+        let attempts = 0;
+        while (attempts < 60) {
+            await new Promise(r => setTimeout(r, 3000));
+            const statusResp = await fetch(`/video-generator/status/${jobId}`);
+            const statusData = await statusResp.json();
+            
+            if (statusData.status === 'completed') {
+                document.getElementById('status').style.display = 'none';
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('video-preview').src = `/video-generator/download/${jobId}`;
+                document.getElementById('download-btn').href = `/video-generator/download/${jobId}`;
+                break;
+            } else if (statusData.status === 'failed') {
+                throw new Error(statusData.error || 'Generation failed');
+            }
+            
+            document.getElementById('status-text').textContent = `Generating... ${attempts * 3}s elapsed`;
+            attempts++;
+        }
+    } catch (e) {
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error-text').textContent = e.message;
+        document.getElementById('status').style.display = 'none';
+    }
+    
+    document.getElementById('generate-btn').disabled = false;
+});
+</script>
+{% endblock %}

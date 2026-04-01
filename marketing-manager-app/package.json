@@ -1,0 +1,33 @@
+{
+  "name": "marketing-manager",
+  "version": "1.0.0",
+  "description": "Marketing Manager - Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --dir",
+    "build:linux": "electron-builder --linux --dir"
+  },
+  "author": "Mystik Singh",
+  "license": "MIT",
+  "build": {
+    "appId": "com.mystik.marketingmanager",
+    "productName": "Marketing Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": ["dir"],
+      "category": "Office"
+    },
+    "files": [
+      "main.js",
+      "start-flask.sh",
+      "!**/node_modules/*/.{md,ts,map}"
+    ],
+    "asar": true,
+    "extraMetadata": {
+      "main": "main.js"
+    }
+  }
+}

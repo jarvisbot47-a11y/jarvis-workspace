@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+node_modules/
+.openclaw/
+memory/
+*.ogg
+*.mp3
+*.wav
+caprine-bin/
+marketing-manager-app/dist/linux-unpacked/marketing-manager

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emulator Controller - Marketing Manager</title>
+    <style>
+        :root { --bg-dark: #0d0d0d; --bg-card: #1a1a1a; --bg-card-hover: #222; --accent: #c8a45a; --accent-dim: #8a6d3b; --accent-glow: rgba(200,164,90,0.15); --text: #e0e0e0; --text-dim: #888; --border: #2a2a2a; --success: #4caf50; --warning: #ff9800; --danger: #f44336; --info: #2196f3; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.6; min-height: 100vh; }
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 240px; background: #111; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-brand h1 { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .sidebar-brand span { font-size: 11px; color: var(--text-dim); display: block; margin-top: 2px; }
+        .sidebar nav { flex: 1; padding: 16px 0; overflow-y: auto; max-height: calc(100vh - 200px); }
+        .sidebar nav a { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; }
+        .sidebar nav a:hover { color: var(--text); background: var(--bg-card); }
+        .sidebar nav a.active { color: var(--accent); background: var(--accent-glow); border-left-color: var(--accent); }
+        .sidebar nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+        .main { margin-left: 240px; min-height: 100vh; }
+        .topbar { background: rgba(13,13,13,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h2 { font-size: 20px; font-weight: 600; }
+        .page-content { padding: 32px; max-width: 1400px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-success { background: rgba(76,175,80,0.2); color: var(--success); border: 1px solid rgba(76,175,80,0.4); }
+        .btn-warning { background: rgba(255,152,0,0.2); color: var(--warning); border: 1px solid rgba(255,152,0,0.4); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .instance-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .instance-card.running { border-color: var(--success); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(76,175,80,0.05) 100%); }
+        .instance-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .instance-name { font-size: 15px; font-weight: 700; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-running { background: var(--success); box-shadow: 0 0 6px var(--success); }
+        .status-stopped { background: var(--text-dim); }
+        .instance-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; }
+        .instance-meta span { display: flex; align-items: center; gap: 4px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-card .stat-value { font-size: 28px; font-weight: 700; }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand"><h1>⚡ Marketing Manager</h1><span>Mystik Singh</span></div>
+        <nav>
+            <a href="{{ url_for('index') }}"><span class="icon">📊</span> Dashboard</a>
+            <a href="{{ url_for('proxies') }}"><span class="icon">🌐</span> Proxy Manager</a>
+            <a href="{{ url_for('streaming_accounts') }}"><span class="icon">🔒</span> Streaming Accounts</a>
+            <a href="{{ url_for('streaming_automation') }}"><span class="icon">▶️</span> Streaming Automation</a>
+            <a href="{{ url_for('account_creator') }}"><span class="icon">🔐</span> Account Creator</a>
+            <a href="{{ url_for('emulators') }}" class="active"><span class="icon">📱</span> Emulators</a>
+            <a href="{{ url_for('scheduler') }}"><span class="icon">⏰</span> Scheduler</a>
+            <a href="{{ url_for('statistics') }}"><span class="icon">📈</span> Statistics</a>
+            <a href="{{ url_for('tiktok') }}"><span class="icon">🎵</span> TikTok Bot</a>
+            <a href="{{ url_for('ai_playlists') }}"><span class="icon">🤖</span> AI Playlists</a>
+            <a href="{{ url_for('anti_detect') }}"><span class="icon">🛡️</span> Anti-Detect</a>
+            <a href="{{ url_for('email_accounts') }}"><span class="icon">📧</span> Email Accounts</a>
+            <a href="{{ url_for('export') }}"><span class="icon">💾</span> Backup Data</a>
+        </nav>
+        <div class="sidebar-footer">Memento Mori Series<br>Vol. 1 · 2 · 3</div>
+    </aside>
+    <main class="main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar"><h2>📱 Emulator Controller</h2><button class="btn btn-primary" onclick="openModal('addInstanceModal')">+ New Instance</button></div>
+        <div class="page-content">
+            <div class="grid-3">
+                <div class="stat-card"><div class="stat-value">{{ instances|length }}</div><div class="stat-label">Total Instances</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--success)">{{ instances|selectattr('status','equalto','running')|list|length }}</div><div class="stat-label">Running</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--text-dim)">{{ instances|selectattr('status','equalto','stopped')|list|length }}</div><div class="stat-label">Stopped</div></div>
+            </div>
+            {% for inst in instances %}
+            <div class="instance-card {% if inst.status == 'running' %}running{% endif %}">
+                <div class="instance-header">
+                    <div class="instance-name"><span class="status-dot status-{{ inst.status }}"></span>{{ inst.name }}</div>
+                    <div>
+                        {% if inst.status == 'running' %}
+                        <form action="/emulators/{{ inst.id }}/stop" method="POST" style="display:inline;"><button class="btn btn-sm btn-warning" type="submit">⏹️ Stop</button></form>
+                        {% else %}
+                        <form action="/emulators/{{ inst.id }}/start" method="POST" style="display:inline;"><button class="btn btn-sm btn-success" type="submit">▶️ Start</button></form>
+                        {% endif %}
+                        <button class="btn btn-sm btn-secondary" onclick="editInstance({{ inst }})">✏️</button>
+                        <form action="/emulators/{{ inst.id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this instance?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                    </div>
+                </div>
+                <div class="instance-meta">
+                    <span>🤖 Android {{ inst.android_version or '12' }}</span>
+                    <span>📱 {{ inst.device_name or 'Generic Phone' }}</span>
+                    <span>📐 {{ inst.screen_width or 1080 }}x{{ inst.screen_height or 1920 }}</span>
+                    <span>🌐 {% if inst.proxy_string %}Proxy: {{ inst.proxy_string[:30] }} ({{ inst.city or inst.country or 'Unknown' }}){% else %}No Proxy{% endif %}</span>
+                    <span>🔒 {% if inst.account_name %}{{ inst.account_name }}{% else %}No Account{% endif %}</span>
+                    <span>🛡️ {% if inst.platform %}{{ inst.platform }}{% else %}Default{% endif %}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="card" style="text-align:center; padding:60px; color:var(--text-dim)">No emulator instances yet. Create your first instance to start automating mobile streaming.</div>
+            {% endfor %}
+        </div>
+    </main>
+    <div class="modal-overlay" id="addInstanceModal">
+        <div class="modal">
+            <div class="modal-header"><h3>📱 New Emulator Instance</h3><button class="modal-close" onclick="closeModal('addInstanceModal')">&times;</button></div>
+            <form action="/emulators/add" method="POST">
+                <div class="form-row">
+                    <div class="form-group"><label>Instance Name</label><input class="form-control" name="name" required placeholder="Emulator-01"></div>
+                    <div class="form-group"><label>Android Version</label><select class="form-control" name="android_version">{% for v in android_versions %}<option value="{{ v }}">Android {{ v }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="form-group"><label>Device Profile</label><select class="form-control" name="device_name" onchange="updateDevice(this.value)">{% for name, profile in device_profiles.items() %}<option value="{{ name }}">{{ name }} ({{ profile.screen_width }}x{{ profile.screen_height }})</option>{% endfor %}</select></div>
+                <div class="form-row-3">
+                    <div class="form-group"><label>CPU Cores</label><input class="form-control" name="cpu_cores" type="number" value="2"></div>
+                    <div class="form-group"><label>RAM (MB)</label><input class="form-control" name="ram_mb" type="number" value="2048"></div>
+                    <div class="form-group"><label>DPI</label><input class="form-control" name="dpi" type="number" value="480"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Bind Proxy</label><select class="form-control" name="proxy_id"><option value="">— None —</option>{% for p in proxies %}<option value="{{ p.id }}">{{ p.proxy_string[:40] }} ({{ p.country }})</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Bind Streaming Account</label><select class="form-control" name="account_id"><option value="">— None —</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.platform }}: {{ a.email or a.username }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="form-group"><label>Bind Anti-Detect Profile</label><select class="form-control" name="profile_id"><option value="">— Default —</option>{% for pr in profiles %}<option value="{{ pr.id }}">{{ pr.name }}</option>{% endfor %}</select></div>
+                <div class="form-group"><label>Notes</label><textarea class="form-control" name="notes" rows="2"></textarea></div>
+                <div style="display:flex; gap:12px; margin-top:8px;"><button type="submit" class="btn btn-primary" style="flex:1">Create Instance</button><button type="button" class="btn btn-secondary" onclick="closeModal('addInstanceModal')">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="editInstanceModal">
+        <div class="modal">
+            <div class="modal-header"><h3>✏️ Edit Instance</h3><button class="modal-close" onclick="closeModal('editInstanceModal')">&times;</button></div>
+            <form id="editInstanceForm" method="POST">
+                <div class="form-row">
+                    <div class="form-group"><label>Name</label><input class="form-control" name="name" id="edit_name"></div>
+                    <div class="form-group"><label>Android Version</label><select class="form-control" name="android_version" id="edit_android_version">{% for v in android_versions %}<option value="{{ v }}">Android {{ v }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="form-row-3">
+                    <div class="form-group"><label>CPU Cores</label><input class="form-control" name="cpu_cores" type="number" id="edit_cpu_cores"></div>
+                    <div class="form-group"><label>RAM (MB)</label><input class="form-control" name="ram_mb" type="number" id="edit_ram_mb"></div>
+                    <div class="form-group"><label>DPI</label><input class="form-control" name="dpi" type="number" id="edit_dpi"></div>
+                </div>
+                <div style="display:flex; gap:12px; margin-top:8px;"><button type="submit" class="btn btn-primary" style="flex:1">Save Changes</button><button type="button" class="btn btn-secondary" onclick="closeModal('editInstanceModal')">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+    <script>
+        const deviceProfiles = {{ device_profiles|tojson }};
+        function updateDevice(name) { if(deviceProfiles[name]) { document.querySelector('[name=dpi]').value = deviceProfiles[name].dpi; } }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editInstance(inst) {
+            document.getElementById('edit_name').value = inst.name || '';
+            document.getElementById('edit_android_version').value = inst.android_version || '12';
+            document.getElementById('edit_cpu_cores').value = inst.cpu_cores || 2;
+            document.getElementById('edit_ram_mb').value = inst.ram_mb || 2048;
+            document.getElementById('edit_dpi').value = inst.dpi || 480;
+            document.getElementById('editInstanceForm').action = '/emulators/' + inst.id + '/edit';
+            openModal('editInstanceModal');
+        }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>
+</body>
+</html>

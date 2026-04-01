@@ -1,0 +1,818 @@
+{% extends "base.html" %}
+{% block title %}Cloud Phones - Marketing Manager{% endblock %}
+{% block page_title %}📱 Cloud Phones{% endblock %}
+{% block topbar_actions %}
+<button class="btn btn-primary" onclick="openAddModal()">+ Connect Phone</button>
+<button class="btn btn-secondary" onclick="scanForDevices()">🔍 Scan</button>
+{% endblock %}
+{% block extra_head %}
+<style>
+    .topbar h2 { font-size: 20px; font-weight: 600; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .card-header h3 { font-size: 16px; font-weight: 600; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #d4b36a; }
+    .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-success { background: rgba(76,175,80,0.2); color: var(--success); border: 1px solid rgba(76,175,80,0.4); }
+    .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; box-sizing: border-box; }
+    .form-control:focus { outline: none; border-color: var(--accent); }
+    select.form-control { cursor: pointer; }
+    .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+    .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+    .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+    .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .modal-header h3 { font-size: 18px; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .modal-close:hover { background: var(--bg-card-hover); color: var(--text); }
+
+    .phone-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+    .phone-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+    .phone-card.online { border-color: var(--success); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(76,175,80,0.05) 100%); }
+    .phone-card.offline { border-color: var(--text-dim); opacity: 0.7; }
+    .phone-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .phone-name { font-size: 16px; font-weight: 700; }
+    .phone-serial { font-size: 11px; color: var(--text-dim); font-family: monospace; margin-top: 4px; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .status-online { background: rgba(76,175,80,0.2); color: var(--success); }
+    .status-offline { background: rgba(150,150,150,0.15); color: var(--text-dim); }
+    .phone-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .phone-meta-item { background: var(--bg-dark); border-radius: 8px; padding: 10px 12px; }
+    .phone-meta-item label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+    .phone-meta-item span { font-size: 13px; font-weight: 600; color: var(--text); }
+    .phone-proxy { background: var(--bg-dark); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; }
+    .phone-proxy label { color: var(--text-dim); font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .phone-proxy span { color: var(--accent); font-weight: 600; }
+    .phone-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .phone-detail-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 180px); }
+    .phone-screen-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .phone-screen-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .phone-screen-header h3 { font-size: 14px; font-weight: 700; }
+    .phone-screen-view { flex: 1; overflow: hidden; position: relative; background: #000; display: flex; align-items: center; justify-content: center; min-height: 400px; }
+    .phone-screen-view img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .phone-screen-tap-overlay { position: absolute; inset: 0; cursor: crosshair; }
+    .phone-controls { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--bg-dark); }
+    .phone-control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .phone-control-panel-header { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 700; }
+    .phone-control-panel-body { padding: 16px 20px; }
+    .control-group { margin-bottom: 16px; }
+    .control-group label { display: block; font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; }
+    .control-group input { width: 100%; padding: 8px 12px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; box-sizing: border-box; }
+    .control-group input:focus { outline: none; border-color: var(--accent); }
+    .control-group select { width: 100%; padding: 8px 12px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; cursor: pointer; }
+    .control-group textarea { width: 100%; padding: 8px 12px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; resize: vertical; min-height: 60px; box-sizing: border-box; }
+    .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .apps-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 300px; overflow-y: auto; }
+    .app-item { background: var(--bg-dark); border-radius: 8px; padding: 8px 12px; font-size: 12px; cursor: pointer; transition: background 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .app-item:hover { background: var(--bg-card-hover); color: var(--accent); }
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .quick-action { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; font-size: 11px; text-align: center; cursor: pointer; transition: all 0.2s; color: var(--text); }
+    .quick-action:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-action:active { background: var(--bg-card-hover); }
+    .loading-screen { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); font-size: 14px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tab-bar { display: flex; gap: 4px; padding: 0 0 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-dim); transition: all 0.2s; border: none; background: none; }
+    .tab.active { background: var(--accent); color: #000; }
+    .tab:hover:not(.active) { background: var(--bg-card-hover); }
+    .result-log { background: var(--bg-dark); border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; font-size: 12px; font-family: monospace; }
+    .result-log .success { color: var(--success); }
+    .result-log .error { color: var(--danger); }
+    .result-log .info { color: var(--text-dim); }
+</style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+{% endwith %}
+
+<div class="topbar"><h2>📱 Cloud Phones</h2></div>
+<div class="page-content">
+
+    <!-- Quick Stats -->
+    <!-- Emulator quick-start panel -->
+    <div class="card" style="margin-bottom: 24px; padding: 16px 24px;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <span style="font-size: 14px; font-weight: 700;">🤖 Emulators</span>
+            <select class="form-control" id="emu-select" style="width: 220px;" onchange="loadEmuStatus()">
+                <option value="">Select AVD to start...</option>
+                {% for avd in avds %}
+                <option value="{{ avd.name }}">{{ avd.name }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-success" onclick="startSelectedEmu()" id="btn-start-emu">▶ Start Emulator</button>
+            <button class="btn btn-danger" onclick="stopAllEmus()">⏹ Stop All</button>
+            <div style="margin-left: auto; display: flex; gap: 16px; font-size: 12px; color: var(--text-dim);">
+                <span>Running: <strong id="emu-running-count" style="color: var(--success);">0</strong></span>
+                <span>|</span>
+                <span>ADB Port 5554 | 5556 | 5558</span>
+            </div>
+        </div>
+        <div id="emu-status-bar" style="margin-top: 10px; display: none;" class="flash flash-success"></div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+        <div class="card" style="padding: 16px 20px; text-align: center;">
+            <div style="font-size: 28px; font-weight: 800; color: var(--accent);" id="stat-total">{{ devices|length }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Total Phones</div>
+        </div>
+        <div class="card" style="padding: 16px 20px; text-align: center;">
+            <div style="font-size: 28px; font-weight: 800; color: var(--success);" id="stat-online">{{ devices|selectattr('status','equalto','online')|list|length }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Online</div>
+        </div>
+        <div class="card" style="padding: 16px 20px; text-align: center;">
+            <div style="font-size: 28px; font-weight: 800; color: var(--text-dim);" id="stat-offline">{{ devices|selectattr('status','equalto','offline')|list|length }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Offline</div>
+        </div>
+        <div class="card" style="padding: 16px 20px; text-align: center;">
+            <div style="font-size: 28px; font-weight: 800; color: var(--warning);" id="stat-proxies">{{ devices|selectattr('proxy_host','ne','none')|list|length if devices else 0 }}</div>
+            <div style="font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">With Proxy</div>
+        </div>
+    </div>
+
+    <!-- Phone List / Detail View -->
+    <div id="phone-list-view">
+        {% if devices %}
+        <div class="phone-grid">
+            {% for device in devices %}
+            <div class="phone-card {{ device.status }}" id="phone-card-{{ loop.index0 }}">
+                <div class="phone-header">
+                    <div>
+                        <div class="phone-name">{{ device.name }}</div>
+                        <div class="phone-serial">{{ device.serial }}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span class="status-badge status-{{ device.status }}">{{ device.status }}</span>
+                        <button class="btn btn-sm btn-danger" onclick="removePhone('{{ device.serial }}')" title="Remove">✕</button>
+                    </div>
+                </div>
+                <div class="phone-meta">
+                    <div class="phone-meta-item">
+                        <label>Model</label>
+                        <span>{{ device.model or 'Unknown' }}</span>
+                    </div>
+                    <div class="phone-meta-item">
+                        <label>Android</label>
+                        <span>{{ device.android_version or '?' }}</span>
+                    </div>
+                    <div class="phone-meta-item">
+                        <label>IP Address</label>
+                        <span>{{ device.ip_address or 'N/A' }}</span>
+                    </div>
+                    <div class="phone-meta-item">
+                        <label>Last Seen</label>
+                        <span>{{ device.last_seen[:19] if device.last_seen else 'Never' }}</span>
+                    </div>
+                </div>
+                {% if device.proxy_host %}
+                <div class="phone-proxy">
+                    <label>Proxy</label>
+                    <span>{{ device.proxy_host }}:{{ device.proxy_port }}</span>
+                </div>
+                {% endif %}
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button class="btn btn-sm btn-primary" onclick="openDetail('{{ loop.index0 }}', '{{ device.serial }}')">📱 Open</button>
+                    <button class="btn btn-sm btn-secondary" onclick="refreshPhone('{{ device.serial }}')">🔄 Refresh</button>
+                    <button class="btn btn-sm btn-secondary" onclick="openProxyModal('{{ loop.index0 }}', '{{ device.serial }}')">🌐 Proxy</button>
+                    <button class="btn btn-sm btn-secondary" onclick="openAutomationModal('{{ loop.index0 }}', '{{ device.serial }}')">⚡ Automate</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
+            <h3 style="font-size: 18px; margin-bottom: 8px;">No Cloud Phones Connected</h3>
+            <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;">Connect your first Android device to start managing accounts and streaming.</p>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Connect Phone</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Phone Detail View (hidden by default) -->
+    <div id="phone-detail-view" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <button class="btn btn-secondary" onclick="closeDetail()">← Back to List</button>
+            <span id="detail-phone-name" style="font-size: 16px; font-weight: 700;"></span>
+            <span id="detail-phone-serial" style="font-size: 12px; color: var(--text-dim); font-family: monospace;"></span>
+        </div>
+        <div class="phone-detail-layout">
+            <!-- Left: Screen + Controls -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="phone-screen-container">
+                    <div class="phone-screen-header">
+                        <h3>Screen</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-sm btn-secondary" onclick="captureScreen()">📷 Capture</button>
+                            <button class="btn btn-sm btn-secondary" onclick="startStream()">▶ Stream</button>
+                            <button class="btn btn-sm btn-secondary" onclick="stopStream()">⏹ Stop</button>
+                        </div>
+                    </div>
+                    <div class="phone-screen-view" id="screen-view">
+                        <div class="loading-screen">Connect to a phone to see the screen</div>
+                        <canvas id="screen-canvas" style="display: none; max-width: 100%; max-height: 100%;"></canvas>
+                        <div class="phone-screen-tap-overlay" id="tap-overlay" style="display: none;" onclick="handleTap(event)"></div>
+                    </div>
+                    <div class="phone-controls">
+                        <div class="quick-actions">
+                            <div class="quick-action" onclick="sendKey('BACK')">🔙 Back</div>
+                            <div class="quick-action" onclick="sendKey('HOME')">🏠 Home</div>
+                            <div class="quick-action" onclick="sendKey('ENTER')">↵ Enter</div>
+                            <div class="quick-action" onclick="sendKey('APP_SWITCH')">⊞ Tasks</div>
+                            <div class="quick-action" onclick="sendKey('VOLUME_UP')">🔊+</div>
+                            <div class="quick-action" onclick="sendKey('VOLUME_DOWN')">🔊-</div>
+                            <div class="quick-action" onclick="sendKey('POWER')">⏻</div>
+                            <div class="quick-action" onclick="refreshScreen()">🔄 Refresh</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Automation -->
+                <div class="phone-control-panel">
+                    <div class="phone-control-panel-header">⚡ Quick Automation</div>
+                    <div class="phone-control-panel-body">
+                        <div class="control-group">
+                            <label>Open App</label>
+                            <select class="form-control" id="quick-app-select" onchange="launchApp(this.value)">
+                                <option value="">Select app...</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Text Input</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input class="form-control" id="quick-text-input" placeholder="Type text..." style="flex: 1;">
+                                <button class="btn btn-primary btn-sm" onclick="sendText()">Send</button>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>Automation Script</label>
+                            <textarea class="form-control" id="automation-script" placeholder="[
+  {&quot;action&quot;: &quot;launch&quot;, &quot;package&quot;: &quot;com.spotify.client&quot;},
+  {&quot;action&quot;: &quot;wait&quot;, &quot;seconds&quot;: 3},
+  {&quot;action&quot;: &quot;key&quot;, &quot;key&quot;: &quot;HOME&quot;}
+]"></textarea>
+                            <button class="btn btn-primary" style="margin-top: 8px; width: 100%;" onclick="runAutomation()">▶ Run Automation</button>
+                        </div>
+                        <div class="result-log" id="automation-log"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Right: Info + Apps -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="phone-control-panel">
+                    <div class="phone-control-panel-header">📋 Device Info</div>
+                    <div class="phone-control-panel-body" id="device-info">
+                        <div class="control-group"><label>Serial</label><span id="info-serial">-</span></div>
+                        <div class="control-group"><label>Model</label><span id="info-model">-</span></div>
+                        <div class="control-group"><label>Android</label><span id="info-android">-</span></div>
+                        <div class="control-group"><label>IP</label><span id="info-ip">-</span></div>
+                        <div class="control-group"><label>Current App</label><span id="info-current-app">-</span></div>
+                        <div class="control-group"><label>Display</label><span id="info-display">-</span></div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn btn-sm btn-secondary" onclick="refreshDeviceInfo()">🔄 Refresh</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openProxyModal()">🌐 Set Proxy</button>
+                            <button class="btn btn-sm btn-danger" onclick="removePhone(currentSerial)">✕ Remove</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-control-panel" style="flex: 1; overflow: hidden;">
+                    <div class="phone-control-panel-header">📲 Installed Apps</div>
+                    <div class="phone-control-panel-body" style="overflow: hidden;">
+                        <div class="apps-list" id="apps-list">
+                            <div class="loading-screen" style="padding: 20px;">Loading apps...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Connect Cloud Phone</h3>
+            <button class="modal-close" onclick="closeModal('addModal')">×</button>
+        </div>
+        <div class="tab-bar">
+            <button class="tab active" onclick="switchTab(this, 'tab-network')">Network</button>
+            <button class="tab" onclick="switchTab(this, 'tab-adb')">Local ADB</button>
+        </div>
+        <div id="tab-network">
+            <div class="form-group">
+                <label>Phone IP Address</label>
+                <input class="form-control" id="add-host" placeholder="e.g. 192.168.1.100">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ADB Port</label>
+                    <input class="form-control" id="add-port" value="5555">
+                </div>
+                <div class="form-group">
+                    <label>Display Name (optional)</label>
+                    <input class="form-control" id="add-name" placeholder="My Phone">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input class="form-control" id="add-notes" placeholder="Any notes...">
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="connectPhone()">Connect</button>
+        </div>
+        <div id="tab-adb" style="display: none;">
+            <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 16px;">Connect your Android device via USB, then enable ADB over WiFi on the device.</p>
+            <button class="btn btn-primary" style="width: 100%;" onclick="scanADB()">🔍 Scan ADB Devices</button>
+            <div id="adb-devices" style="margin-top: 16px;"></div>
+        </div>
+        <div id="connect-result" style="margin-top: 16px;"></div>
+    </div>
+</div>
+
+<!-- Proxy Modal -->
+<div class="modal-overlay" id="proxyModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🌐 Set Proxy</h3>
+            <button class="modal-close" onclick="closeModal('proxyModal')">×</button>
+        </div>
+        <div class="form-group">
+            <label>Select Proxy</label>
+            <select class="form-control" id="proxy-select">
+                <option value="">— No Proxy —</option>
+                {% for proxy in proxies %}
+                <option value="{{ proxy.id }}">{{ proxy.proxy_url or proxy.host }}:{{ proxy.port }} ({{ proxy.location or 'Unknown' }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px;">
+            <div class="form-group"><label style="color: var(--text-dim); font-size: 11px; text-transform: uppercase;">Manual Entry</label></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Host</label>
+                    <input class="form-control" id="proxy-host" placeholder="proxy.example.com">
+                </div>
+                <div class="form-group">
+                    <label>Port</label>
+                    <input class="form-control" id="proxy-port" placeholder="8080">
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+            <button class="btn btn-primary" style="flex: 1;" onclick="applyProxy()">Apply Proxy</button>
+            <button class="btn btn-secondary" onclick="clearProxy()">Clear Proxy</button>
+        </div>
+    </div>
+</div>
+
+<!-- Automation Modal -->
+<div class="modal-overlay" id="automationModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>⚡ Automation Builder</h3>
+            <button class="modal-close" onclick="closeModal('automationModal')">×</button>
+        </div>
+        <div class="form-group">
+            <label>Steps (JSON array)</label>
+            <textarea class="form-control" id="automation-steps" style="min-height: 200px; font-family: monospace; font-size: 12px;" placeholder='[
+  {&quot;action&quot;: &quot;launch&quot;, &quot;package&quot;: &quot;com.spotify.client&quot;},
+  {&quot;action&quot;: &quot;wait&quot;, &quot;seconds&quot;: 2},
+  {&quot;action&quot;: &quot;tap&quot;, &quot;x&quot;: 540, &quot;y&quot;: 1200},
+  {&quot;action&quot;: &quot;wait&quot;, &quot;seconds&quot;: 1},
+  {&quot;action&quot;: &quot;text&quot;, &quot;text&quot;: &quot;mymail@example.com&quot;},
+  {&quot;action&quot;: &quot;key&quot;, &quot;key&quot;: &quot;ENTER&quot;}
+]'></textarea>
+        </div>
+        <div class="form-group">
+            <label>Quick Templates</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-secondary" onclick="loadTemplate('spotify_login')">Spotify Login</button>
+                <button class="btn btn-sm btn-secondary" onclick="loadTemplate('spotify_signup')">Spotify Signup</button>
+                <button class="btn btn-sm btn-secondary" onclick="loadTemplate('scroll')">Generic Scroll</button>
+            </div>
+        </div>
+        <div id="automation-result" style="margin-top: 16px;"></div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentSerial = null;
+let streamInterval = null;
+let currentDeviceIndex = null;
+
+// ─── Templates ────────────────────────────────────────────────────────────────
+const TEMPLATES = {
+  spotify_login: [
+    {action: 'launch', package: 'com.spotify.client'},
+    {action: 'wait', seconds: 3},
+    {action: 'key', key: 'BACK'},
+    {action: 'wait', seconds: 1},
+  ],
+  spotify_signup: [
+    {action: 'launch', package: 'com.spotify.client'},
+    {action: 'wait', seconds: 3},
+    {action: 'tap', x: 540, y: 800},   // Email field approx
+    {action: 'wait', seconds: 1},
+    {action: 'text', text: 'test@example.com'},
+  ],
+  scroll: [
+    {action: 'swipe', x1: 540, y1: 1500, x2: 540, y2: 600, duration: 400},
+    {action: 'wait', seconds: 1},
+  ],
+};
+
+// ─── Modals ────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function openAddModal() { openModal('addModal'); }
+function openProxyModal(idx, serial) {
+    currentDeviceIndex = idx;
+    if (serial) currentSerial = serial;
+    openModal('proxyModal');
+}
+function openAutomationModal(idx, serial) {
+    currentDeviceIndex = idx;
+    if (serial) currentSerial = serial;
+    document.getElementById('automation-steps').value = JSON.stringify([], null, 2);
+    openModal('automationModal');
+}
+function switchTab(btn, tabId) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-network').style.display = tabId === 'tab-network' ? 'block' : 'none';
+    document.getElementById('tab-adb').style.display = tabId === 'tab-adb' ? 'block' : 'none';
+}
+
+// ─── Connect Phone ────────────────────────────────────────────────────────────
+async function connectPhone() {
+    const host = document.getElementById('add-host').value.trim();
+    const port = document.getElementById('add-port').value.trim() || '5555';
+    const name = document.getElementById('add-name').value.trim() || host;
+    if (!host) { alert('IP address required'); return; }
+    const btn = event.target;
+    btn.textContent = 'Connecting...';
+    btn.disabled = true;
+    try {
+        const res = await fetch('/api/cloud-phones/connect', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({host, port: parseInt(port), name})
+        });
+        const data = await res.json();
+        const resultDiv = document.getElementById('connect-result');
+        if (data.success) {
+            resultDiv.innerHTML = `<div class="flash flash-success">✓ Connected: ${data.serial}</div>`;
+            setTimeout(() => { closeModal('addModal'); location.reload(); }, 1500);
+        } else {
+            resultDiv.innerHTML = `<div class="flash flash-error">✗ Failed: ${data.error}</div>`;
+            btn.textContent = 'Connect';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        document.getElementById('connect-result').innerHTML = `<div class="flash flash-error">Error: ${e}</div>`;
+        btn.textContent = 'Connect';
+        btn.disabled = false;
+    }
+}
+
+// ─── ADB Scan ──────────────────────────────────────────────────────────────────
+async function scanADB() {
+    const res = await fetch('/api/cloud-phones/adb-devices');
+    const data = await res.json();
+    const div = document.getElementById('adb-devices');
+    if (data.devices && data.devices.length > 0) {
+        div.innerHTML = data.devices.map(d =>
+            `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-dark);border-radius:8px;margin-bottom:6px;">
+                <span><strong>${d.serial}</strong> <span style="color:var(--text-dim);font-size:12px;">${d.state}</span></span>
+                <button class="btn btn-sm btn-primary" onclick="connectADB('${d.serial}')">Connect</button>
+            </div>`
+        ).join('');
+    } else {
+        div.innerHTML = '<div class="flash flash-info">No ADB devices found. Connect via USB and enable wireless debugging.</div>';
+    }
+}
+
+async function connectADB(serial) {
+    const res = await fetch('/api/cloud-phones/connect', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({host: serial.split(':')[0], port: parseInt(serial.split(':')[1] || '5555'), name: serial})
+    });
+    const data = await res.json();
+    if (data.success) location.reload();
+    else alert('Failed: ' + (data.error || data.message));
+}
+
+// ─── Scan Network ──────────────────────────────────────────────────────────────
+async function scanForDevices() {
+    const res = await fetch('/api/cloud-phones/scan', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({})});
+    const data = await res.json();
+    if (data.found && data.found.length > 0) {
+        data.found.forEach(d => console.log('Found:', d.serial || d));
+    }
+}
+
+// ─── Device List Actions ───────────────────────────────────────────────────────
+async function removePhone(serial) {
+    if (!confirm(`Remove ${serial}?`)) return;
+    await fetch(`/api/cloud-phones/${encodeURIComponent(serial)}`, {method: 'DELETE'});
+    location.reload();
+}
+
+async function refreshPhone(serial) {
+    const res = await fetch(`/api/cloud-phones/${encodeURIComponent(serial)}/refresh`, {method: 'POST'});
+    const data = await res.json();
+    if (data.device) location.reload();
+}
+
+// ─── Device Detail ─────────────────────────────────────────────────────────────
+async function openDetail(idx, serial) {
+    currentSerial = serial;
+    currentDeviceIndex = idx;
+    document.getElementById('phone-list-view').style.display = 'none';
+    document.getElementById('phone-detail-view').style.display = 'block';
+    await refreshDeviceInfo();
+    await loadApps();
+    refreshScreen();
+}
+
+function closeDetail() {
+    currentSerial = null;
+    stopStream();
+    document.getElementById('phone-detail-view').style.display = 'none';
+    document.getElementById('phone-list-view').style.display = 'block';
+}
+
+async function refreshDeviceInfo() {
+    if (!currentSerial) return;
+    const res = await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}`);
+    const data = await res.json();
+    const d = data.device;
+    if (!d) return;
+    document.getElementById('detail-phone-name').textContent = d.name;
+    document.getElementById('detail-phone-serial').textContent = d.serial;
+    document.getElementById('info-serial').textContent = d.serial;
+    document.getElementById('info-model').textContent = d.model || 'Unknown';
+    document.getElementById('info-android').textContent = d.android_version || 'Unknown';
+    document.getElementById('info-ip').textContent = d.ip_address || 'N/A';
+    // Current app
+    const appRes = await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/current-app`);
+    const appData = await appRes.json();
+    document.getElementById('info-current-app').textContent = appData.package || 'Unknown';
+    // Display size
+    const dispRes = await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/display-size`);
+    const dispData = await dispRes.json();
+    document.getElementById('info-display').textContent = `${dispData.width || '?'}x${dispData.height || '?'}`;
+}
+
+// ─── Screen ────────────────────────────────────────────────────────────────────
+async function captureScreen() {
+    if (!currentSerial) return;
+    const res = await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/screencap`);
+    const data = await res.json();
+    if (data.success) {
+        const img = document.createElement('img');
+        img.src = 'data:image/png;base64,' + data.image;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        const view = document.getElementById('screen-view');
+        view.innerHTML = '';
+        view.appendChild(img);
+        view.style.background = '#000';
+    }
+}
+
+async function refreshScreen() {
+    await captureScreen();
+}
+
+function startStream() {
+    if (!currentSerial) return;
+    stopStream();
+    document.getElementById('tap-overlay').style.display = 'block';
+    streamInterval = setInterval(captureScreen, 500);
+}
+
+function stopStream() {
+    if (streamInterval) { clearInterval(streamInterval); streamInterval = null; }
+    document.getElementById('tap-overlay').style.display = 'none';
+}
+
+function handleTap(e) {
+    if (!currentSerial) return;
+    const view = document.getElementById('screen-view');
+    const rect = view.getBoundingClientRect();
+    const img = view.querySelector('img');
+    // Get actual rendered size
+    let scaleX = 1, scaleY = 1;
+    if (img) {
+        scaleX = img.naturalWidth / img.clientWidth;
+        scaleY = img.naturalHeight / img.clientHeight;
+    }
+    const x = Math.round((e.clientX - rect.left) * scaleX);
+    const y = Math.round((e.clientY - rect.top) * scaleY);
+    fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/tap`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({x, y})
+    }).then(() => setTimeout(captureScreen, 200));
+}
+
+// ─── Device Controls ───────────────────────────────────────────────────────────
+async function sendKey(key) {
+    if (!currentSerial) return;
+    await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/key`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({key})
+    });
+    setTimeout(captureScreen, 200);
+}
+
+async function sendText() {
+    if (!currentSerial) return;
+    const text = document.getElementById('quick-text-input').value;
+    if (!text) return;
+    await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/text`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text})
+    });
+}
+
+async function launchApp(package) {
+    if (!currentSerial || !package) return;
+    await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/launch`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({package})
+    });
+    setTimeout(captureScreen, 1500);
+}
+
+async function loadApps() {
+    if (!currentSerial) return;
+    const res = await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/apps`);
+    const data = await res.json();
+    const select = document.getElementById('quick-app-select');
+    const appsList = document.getElementById('apps-list');
+    const apps = data.apps || [];
+    select.innerHTML = '<option value="">Select app...</option>' +
+        apps.map(a => `<option value="${a}">${a}</option>`).join('');
+    appsList.innerHTML = apps.map(a =>
+        `<div class="app-item" onclick="launchApp('${a}')" title="${a}">${a.split('.').pop()}</div>`
+    ).join('');
+}
+
+// ─── Proxy ─────────────────────────────────────────────────────────────────────
+async function applyProxy() {
+    if (!currentSerial) return;
+    const proxyId = document.getElementById('proxy-select').value;
+    const host = document.getElementById('proxy-host').value.trim();
+    const port = document.getElementById('proxy-port').value.trim();
+    if (proxyId) {
+        await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/proxy-set`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({proxy_id: parseInt(proxyId)})
+        });
+    } else if (host && port) {
+        await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/proxy`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({host, port: parseInt(port)})
+        });
+    }
+    closeModal('proxyModal');
+    location.reload();
+}
+
+async function clearProxy() {
+    if (!currentSerial) return;
+    await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/proxy`, {method: 'DELETE'});
+    closeModal('proxyModal');
+    location.reload();
+}
+
+// ─── Automation ────────────────────────────────────────────────────────────────
+function loadTemplate(name) {
+    const steps = TEMPLATES[name];
+    if (steps) {
+        document.getElementById('automation-steps').value = JSON.stringify(steps, null, 2);
+    }
+}
+
+async function runAutomation() {
+    if (!currentSerial) return;
+    let steps;
+    try {
+        steps = JSON.parse(document.getElementById('automation-steps').value);
+    } catch(e) {
+        alert('Invalid JSON: ' + e.message);
+        return;
+    }
+    const logDiv = document.getElementById('automation-result');
+    logDiv.innerHTML = '<div class="result-log info">Running automation...</div>';
+    const res = await fetch(`/api/cloud-phones/${encodeURIComponent(currentSerial)}/automation/run`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({serial: currentSerial, steps})
+    });
+    const data = await res.json();
+    logDiv.innerHTML = '<div class="result-log">' +
+        data.results.map(r =>
+            `<div class="${r.success ? 'success' : 'error'}">` +
+            `✓ ${r.action}: ${r.success ? r.stdout || 'OK' : r.stderr || 'FAILED'}` +
+            '</div>'
+        ).join('') + '</div>';
+    setTimeout(captureScreen, 500);
+}
+
+// ─── Keyboard shortcuts ───────────────────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+    if (!currentSerial) return;
+    const keyMap = {
+        'Escape': 'BACK',
+        'Backspace': 'BACK',
+        'Home': 'HOME',
+        'Enter': 'ENTER',
+    };
+    if (keyMap[e.key]) { sendKey(keyMap[e.key]); e.preventDefault(); }
+});
+
+// ─── Emulator Management ───────────────────────────────────────────────────────
+async function loadEmuStatus() {
+    const res = await fetch('/api/emulators/list-running');
+    const data = await res.json();
+    document.getElementById('emu-running-count').textContent = data.emulators ? data.emulators.length : 0;
+}
+loadEmuStatus();
+
+async function startSelectedEmu() {
+    const avdName = document.getElementById('emu-select').value;
+    if (!avdName) { alert('Select an AVD first'); return; }
+    const btn = document.getElementById('btn-start-emu');
+    btn.textContent = 'Starting...';
+    btn.disabled = true;
+    const statusBar = document.getElementById('emu-status-bar');
+    statusBar.style.display = 'none';
+    try {
+        const res = await fetch('/api/emulators/start', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({avd_name: avdName, headless: true})
+        });
+        const data = await res.json();
+        if (data.success) {
+            statusBar.className = 'flash flash-success';
+            statusBar.textContent = `✓ Emulator started: ${avdName} on ${data.serial} (ADB port ${data.port})`;
+            statusBar.style.display = 'block';
+            setTimeout(() => location.reload(), 3000);
+        } else {
+            statusBar.className = 'flash flash-error';
+            statusBar.textContent = `✗ Failed: ${data.error}`;
+            statusBar.style.display = 'block';
+        }
+    } catch(e) {
+        statusBar.className = 'flash flash-error';
+        statusBar.textContent = `Error: ${e}`;
+        statusBar.style.display = 'block';
+    }
+    btn.textContent = '▶ Start Emulator';
+    btn.disabled = false;
+}
+
+async function stopAllEmus() {
+    if (!confirm('Stop all emulators?')) return;
+    await fetch('/api/emulators/stop-all', {method: 'POST'});
+    location.reload();
+}
+
+// ─── Auto-refresh device list ─────────────────────────────────────────────────
+setInterval(async () => {
+    if (document.getElementById('phone-list-view').style.display !== 'none') {
+        const res = await fetch('/api/cloud-phones');
+        const data = await res.json();
+        document.getElementById('stat-online').textContent =
+            data.devices.filter(d => d.status === 'online').length;
+        await loadEmuStatus();
+    }
+}, 10000);
+</script>
+{% endblock %}

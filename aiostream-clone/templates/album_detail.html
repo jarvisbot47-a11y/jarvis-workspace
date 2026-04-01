@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ album.title }} - Mystik Singh Promotion HQ{% endblock %}
+{% block page_title %}{{ album.title }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 280px;">
+        <div class="card">
+            <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 16px;">
+                <div style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--accent-dim), #333); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 48px; flex-shrink: 0;">💿</div>
+                <div>
+                    <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 4px;">{{ album.title }}</h2>
+                    <div style="color: var(--text-dim); font-size: 14px; margin-bottom: 8px;">
+                        Released: {{ album.release_date }} · {{ album.total_tracks }} tracks
+                    </div>
+                    <span class="badge badge-{{ album.status }}">{{ album.status|title }}</span>
+                </div>
+            </div>
+            {% if album.description %}
+            <p style="font-size: 14px; line-height: 1.7; color: var(--text-dim);">{{ album.description }}</p>
+            {% endif %}
+            <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+                {% if album.spotify_url %}
+                <a href="{{ album.spotify_url }}" target="_blank" class="btn btn-secondary btn-sm">🎵 Spotify</a>
+                {% endif %}
+                {% if album.apple_music_url %}
+                <a href="{{ album.apple_music_url }}" target="_blank" class="btn btn-secondary btn-sm">🍎 Apple Music</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div style="min-width: 300px;">
+        <div class="card">
+            <div class="card-header">
+                <h3>Quick Pitch Album</h3>
+            </div>
+            <form action="{{ url_for('submission_add') }}" method="post">
+                <input type="hidden" name="album_id" value="{{ album.id }}">
+                <div class="form-group">
+                    <label>Curator</label>
+                    <select name="curator_id" class="form-control" required>
+                        <option value="">Select curator...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="notes" class="form-control" placeholder="Personalization..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">📨 Log Submission</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Tracks -->
+<div class="card">
+    <div class="card-header">
+        <h3>Tracklist</h3>
+        <a href="{{ url_for('tracks') }}" class="btn btn-secondary btn-sm">+ Add Track</a>
+    </div>
+    {% if tracks %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Duration</th>
+                    <th>BPM</th>
+                    <th>Key</th>
+                    <th>Links</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for track in tracks %}
+                <tr>
+                    <td style="color: var(--text-dim);">{{ track.track_number }}</td>
+                    <td style="font-weight: 600;">{{ track.title }}</td>
+                    <td style="color: var(--text-dim);">{{ track.duration_secs // 60 if track.duration_secs else '—' }}:{{ '%02d' % (track.duration_secs % 60 if track.duration_secs else 0) }}</td>
+                    <td style="color: var(--text-dim);">{{ track.bpm or '—' }}</td>
+                    <td style="color: var(--text-dim);">{{ track.key_text or '—' }}</td>
+                    <td>
+                        {% if track.spotify_url %}
+                        <a href="{{ track.spotify_url }}" target="_blank" class="btn btn-secondary btn-xs">🎵</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No tracks added yet. <a href="{{ url_for('tracks') }}">Add tracks</a></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

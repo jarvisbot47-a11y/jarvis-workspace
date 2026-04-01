@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}TikTok Bot - Marketing Manager{% endblock %}
+{% block page_title %}🎵 TikTok Bot Module{% endblock %}
+{% block topbar_actions %}
+<div style="display:flex; gap:8px;">
+                <button class="btn btn-primary" onclick="openModal('addTTAccount')">+ Add TikTok Account</button>
+                <button class="btn btn-secondary" onclick="openModal('addCampaign')">+ New Campaign</button>
+            </div>
+{% endblock %}
+{% block extra_head %}
+    <style>
+        /* Page-specific styles */
+
+                .topbar h2 { font-size: 20px; font-weight: 600; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d4b36a; }
+        .btn-secondary { background: var(--bg-card-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(244,67,54,0.1); color: var(--danger); border: 1px solid rgba(244,67,54,0.3); }
+        .btn-success { background: rgba(76,175,80,0.2); color: var(--success); border: 1px solid rgba(76,175,80,0.4); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; transition: border-color 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .flash { padding: 14px 20px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+        .flash-success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: var(--success); }
+        .flash-error { background: rgba(244,67,54,0.15); border: 1px solid rgba(244,67,54,0.3); color: var(--danger); }
+        .flash-info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: var(--info); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 560px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .modal-header h3 { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-card .stat-value { font-size: 28px; font-weight: 700; }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 4px; }
+        .account-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .campaign-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .campaign-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .campaign-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; }
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-draft { background: rgba(128,128,128,0.15); color: var(--text-dim); }
+        .badge-running { background: rgba(76,175,80,0.15); color: var(--success); }
+        .badge-completed { background: rgba(200,164,90,0.15); color: var(--accent); }
+        .badge-active { background: rgba(76,175,80,0.15); color: var(--success); }
+    
+    </style>
+{% endblock %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div style="padding: 20px 32px 0;">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        <div class="topbar">
+            <h2>🎵 TikTok Bot Module</h2>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-primary" onclick="openModal('addTTAccount')">+ Add TikTok Account</button>
+                <button class="btn btn-secondary" onclick="openModal('addCampaign')">+ New Campaign</button>
+            </div>
+        </div>
+        <div class="page-content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-value">{{ accounts|length }}</div><div class="stat-label">TikTok Accounts</div></div>
+                <div class="stat-card"><div class="stat-value">{{ accounts|sum(attribute='followers') }}</div><div class="stat-label">Total Followers</div></div>
+                <div class="stat-card"><div class="stat-value">{{ campaigns|length }}</div><div class="stat-label">Campaigns</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:var(--success)">{{ campaigns|selectattr('status','equalto','running')|list|length }}</div><div class="stat-label">Running</div></div>
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header"><h3>TikTok Accounts</h3></div>
+                    {% for a in accounts %}
+                    <div class="account-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div><strong>@{{ a.username }}</strong>{% if a.display_name %} ({{ a.display_name }}){% endif %}</div>
+                            <span class="badge badge-{{ a.status }}">{{ a.status }}</span>
+                        </div>
+                        <div class="campaign-meta" style="margin-top:8px;">
+                            <span>👥 {{ a.followers or 0 }} followers</span>
+                            <span>❤️ {{ a.likes or 0 }} likes</span>
+                            <span>👁️ {{ a.total_views or 0 }} views</span>
+                            {% if a.proxy_id %}🌐 Proxy bound{% endif %}
+                        </div>
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-secondary" onclick="editTTAccount({{ a }})">✏️</button>
+                            <form action="/tiktok/accounts/{{ a.id }}/delete" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="text-align:center; padding:40px; color:var(--text-dim)">No TikTok accounts yet.</div>
+                    {% endfor %}
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Promotion Campaigns</h3></div>
+                    {% for c in campaigns %}
+                    <div class="campaign-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4>{{ c.campaign_name }}</h4>
+                            <span class="badge badge-{{ c.status }}">{{ c.status }}</span>
+                        </div>
+                        <div style="font-size:13px; color:var(--text-dim); margin-bottom:8px;">{{ c.description or '-' }}</div>
+                        <div class="campaign-meta">
+                            <span>👁️ {{ c.total_views or 0 }} views</span>
+                            <span>❤️ {{ c.total_likes or 0 }} likes</span>
+                            <span>💬 {{ c.total_comments or 0 }} comments</span>
+                            {% if c.track_title %}<span>🎵 {{ c.track_title }}</span>{% endif %}
+                        </div>
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button class="btn btn-sm btn-secondary" onclick="editCampaign({{ c }})">✏️</button>
+                            {% if c.status == 'draft' %}
+                            <form action="/tiktok/campaigns/{{ c.id }}/execute" method="POST"><button class="btn btn-sm btn-success" type="submit">▶️ Execute</button></form>
+                            {% endif %}
+                            <form action="/tiktok/campaigns/{{ c.id }}/delete" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-sm btn-danger" type="submit">🗑️</button></form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="text-align:center; padding:40px; color:var(--text-dim)">No campaigns yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function editTTAccount(a) { alert('Edit: ' + a.username); }
+        function editCampaign(c) { alert('Edit: ' + c.campaign_name); }
+        document.querySelectorAll('.flash').forEach(f => { setTimeout(() => f.style.opacity = '0', 4000); setTimeout(() => f.remove(), 4500); });
+    </script>{% endblock %}

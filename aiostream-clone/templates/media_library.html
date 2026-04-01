@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Media Library - Marketing Manager{% endblock %}
+{% block page_title %}Media Library{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:10px;">
+    <button class="btn btn-secondary" onclick="openModal('modal-upload')">+ Upload</button>
+    <button class="btn btn-secondary" onclick="openModal('modal-new-campaign')">+ New Campaign</button>
+    <a href="{{ url_for('upload_post') }}" class="btn btn-primary" style="background:var(--accent);box-shadow:0 4px 20px var(--accent-glow);">📤 Post via Upload-Post</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label">Videos</div>
+        <div class="stat-value" style="color:var(--accent);">{{ stats.videos or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Images</div>
+        <div class="stat-value">{{ stats.images or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Audio</div>
+        <div class="stat-value">{{ stats.audio or 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Campaigns</div>
+        <div class="stat-value" style="color:var(--warning);">{{ stats.campaigns or 0 }}</div>
+    </div>
+</div>
+
+<div class="filters-bar">
+    <select onchange="filterByType(this.value)">
+        <option value="">All Types</option>
+        <option value="video">Video</option>
+        <option value="image">Image</option>
+        <option value="audio">Audio</option>
+        <option value="captioned_video">Captioned Video</option>
+    </select>
+    <select onchange="filterByCampaign(this.value)">
+        <option value="">All Campaigns</option>
+        {% for c in campaigns %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" placeholder="Search files..." onkeyup="searchFiles(this.value)"
+           style="padding:8px 13px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-width:200px;">
+</div>
+
+<!-- Campaigns -->
+<div class="card">
+    <div class="card-header">
+        <h3>Campaigns</h3>
+    </div>
+    {% if campaigns %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Platforms</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in campaigns %}
+                <tr>
+                    <td><strong>{{ c.name }}</strong></td>
+                    <td>
+                        {% if c.platforms %}
+                        {% set plats = c.platforms if c.platforms is string else c.platforms %}
+                        {% for p in plats %}
+                        <span class="platform-badge" style="margin-right:4px;">{{ p }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td>{{ c.start_date or '—' }}</td>
+                    <td>{{ c.end_date or '—' }}</td>
+                    <td>
+                        {% if c.status == 'active' %}
+                        <span class="badge badge-active">Active</span>
+                        {% elif c.status == 'completed' %}
+                        <span class="badge badge-pending">Completed</span>
+                        {% else %}
+                        <span class="badge badge-noresponse">{{ c.status or 'draft' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;">
+                            <a href="/media-library/campaign/{{ c.id }}" class="btn btn-sm btn-secondary">View</a>
+                            <form action="/campaign/{{ c.id }}/delete" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Del</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-dim);padding:20px;text-align:center;">No campaigns yet.</p>
+    {% endif %}
+</div>
+
+<!-- Media Grid -->
+<div class="card">
+    <div class="card-header">
+        <h3>Media Files</h3>
+        <div>
+            <button class="btn btn-sm btn-secondary" onclick="selectAll()">Select All</button>
+            <button class="btn btn-sm btn-secondary" onclick="exportSelected()">Export Selected</button>
+        </div>
+    </div>
+    <div id="media-grid" class="grid-4" style="gap:15px;">
+        {% for asset in assets %}
+        <div class="media-item" style="background:var(--bg-dark);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative;" data-id="{{ asset.id }}" data-type="{{ asset.asset_type }}" data-path="{{ asset.file_path }}">
+            <input type="checkbox" class="media-check" style="position:absolute;top:8px;left:8px;z-index:5;" data-id="{{ asset.id }}">
+
+            {% if asset.asset_type == 'video' or asset.asset_type == 'captioned_video' %}
+            <video width="100%" style="display:block;border-radius:8px;" preload="metadata">
+                <source src="{{ asset.file_path }}" type="video/mp4">
+            </video>
+            {% elif asset.asset_type == 'image' %}
+            <img src="{{ asset.file_path }}" style="width:100%;display:block;border-radius:8px;aspect-ratio:1;object-fit:cover;" loading="lazy">
+            {% else %}
+            <div style="padding:30px;text-align:center;color:var(--text-dim);">
+                <div style="font-size:30px;">{{ asset.asset_type[0] | upper }}</div>
+                <div style="font-size:11px;margin-top:5px;">{{ asset.asset_type }}</div>
+            </div>
+            {% endif %}
+
+            <div style="padding:10px;">
+                <div style="font-size:12px;font-weight:600;margin-bottom:3px;">
+                    {{ asset.file_path | truncate(25, true) }}
+                </div>
+                <div style="font-size:10px;color:var(--text-dim);">
+                    {{ asset.format }}{% if asset.width %} · {{ asset.width }}x{{ asset.height }}{% endif %}
+                    {% if asset.duration_secs %} · {{ (asset.duration_secs / 60) | round(1) }}m{% endif %}
+                </div>
+                <div style="margin-top:8px;display:flex;gap:5px;">
+                    <button class="btn btn-sm btn-secondary" onclick="downloadAsset('{{ asset.file_path }}')">↓</button>
+                    <form action="/content-asset/{{ asset.id }}/delete" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger">×</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not assets %}
+    <p style="color:var(--text-dim);padding:40px;text-align:center;">
+        No media files yet. Upload videos or images to get started.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Templates -->
+<div class="card">
+    <div class="card-header">
+        <h3>Music Promo Templates</h3>
+    </div>
+    <div class="grid-3" style="gap:15px;">
+        <div style="background:var(--bg-dark);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;" onclick="useTemplate('lyric_video')">
+            <div style="font-size:36px;margin-bottom:10px;">&#127925;</div>
+            <h4>Lyric Video</h4>
+            <p style="font-size:12px;color:var(--text-dim);margin-top:5px;">Animated text overlay synced to audio</p>
+        </div>
+        <div style="background:var(--bg-dark);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;" onclick="useTemplate('album_art_video')">
+            <div style="font-size:36px;margin-bottom:10px;">&#127925;</div>
+            <h4>Album Art Video</h4>
+            <p style="font-size:12px;color:var(--text-dim);margin-top:5px;">Album cover with audio waveform</p>
+        </div>
+        <div style="background:var(--bg-dark);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;" onclick="useTemplate('clip_highlight')">
+            <div style="font-size:36px;margin-bottom:10px;">&#127916;</div>
+            <h4>Clip Highlight</h4>
+            <p style="font-size:12px;color:var(--text-dim);margin-top:5px;">Short clip from full track with captions</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Upload Modal -->
+<div class="modal-overlay" id="modal-upload">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Upload Media</h3>
+            <button class="modal-close" onclick="closeModal('modal-upload')">&times;</button>
+        </div>
+        <form action="/media-library/upload" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Select Files</label>
+                <input type="file" name="files" class="form-control" multiple accept="video/*,image/*,audio/*">
+            </div>
+            <div class="form-group">
+                <label>Campaign</label>
+                <select name="campaign_id" class="form-control">
+                    <option value="">— No Campaign —</option>
+                    {% for c in campaigns %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Asset Type</label>
+                <select name="asset_type" class="form-control">
+                    <option value="video">Video</option>
+                    <option value="image">Image</option>
+                    <option value="audio">Audio</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-upload')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- New Campaign Modal -->
+<div class="modal-overlay" id="modal-new-campaign">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>New Campaign</h3>
+            <button class="modal-close" onclick="closeModal('modal-new-campaign')">&times;</button>
+        </div>
+        <form action="/campaign/add" method="POST">
+            <div class="form-group">
+                <label>Campaign Name</label>
+                <input type="text" name="name" class="form-control" required placeholder="Memento Mori Vol. 2 Launch">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" name="start_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="date" name="end_date" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Target Platforms</label>
+                <div style="display:flex;gap:15px;margin-top:5px;">
+                    <label><input type="checkbox" name="platforms" value="instagram" checked> Instagram</label>
+                    <label><input type="checkbox" name="platforms" value="tiktok" checked> TikTok</label>
+                    <label><input type="checkbox" name="platforms" value="youtube"> YouTube</label>
+                    <label><input type="checkbox" name="platforms" value="facebook"> Facebook</label>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-campaign')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Campaign</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterByType(type) {
+    const url = new URL(location);
+    if (type) url.searchParams.set('type', type);
+    else url.searchParams.delete('type');
+    location.href = url.toString();
+}
+
+function filterByCampaign(campaignId) {
+    const url = new URL(location);
+    if (campaignId) url.searchParams.set('campaign_id', campaignId);
+    else url.searchParams.delete('campaign_id');
+    location.href = url.toString();
+}
+
+function searchFiles(query) {
+    const items = document.querySelectorAll('.media-item');
+    items.forEach(item => {
+        const path = item.dataset.path.toLowerCase();
+        item.style.display = path.includes(query.toLowerCase()) ? 'block' : 'none';
+    });
+}
+
+function selectAll() {
+    const checks = document.querySelectorAll('.media-check');
+    const allChecked = [...checks].every(c => c.checked);
+    checks.forEach(c => c.checked = !allChecked);
+}
+
+function exportSelected() {
+    const checked = [...document.querySelectorAll('.media-check:checked')];
+    if (checked.length === 0) { alert('Select files first'); return; }
+    const ids = checked.map(c => c.dataset.id).join(',');
+    window.location.href = '/media-library/export?ids=' + ids;
+}
+
+function downloadAsset(path) {
+    window.location.href = '/media-library/download?path=' + encodeURIComponent(path);
+}
+
+function useTemplate(templateType) {
+    openModal('modal-new-campaign');
+}
+</script>
+{% endblock %}
