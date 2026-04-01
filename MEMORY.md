@@ -33,8 +33,6 @@ _Last updated: 2026-03-29_
 - **Categories:** Window Tint, Chrome Delete, Motorcycle, Wheels, Full/Partial Coverage (Small/Med/Large), Panel Pricing (Clear PPF, Colored PPF, Plasti Dip, Vinyl Wrap)
 
 ## Installed Apps
-- Caprine (Facebook Messenger) — installed to `/home/jarvis/.openclaw/workspace/caprine-bin/squashfs-root/`
-- Desktop entry: `~/.local/share/applications/caprine.desktop`
 - Pinned to GNOME favorites bar
 
 ## Workflow Skills Installed
@@ -44,5 +42,4 @@ _Last updated: 2026-03-29_
 - **Primary:** https://github.com/jarvisbot47-a11y/jarvis-workspace (NEW — clean repo)
 - **Old:** https://github.com/jarvisbot47-a11y/jarvis-032426 (OLD — has large file issues, avoid)
 - Clone: `git clone https://github.com/jarvisbot47-a11y/jarvis-workspace.git`
-- After clone: run `setup-apps.sh` to decompress Caprine + Marketing Manager binaries
 - Large apps stored as compressed chunks in `app-binaries/` (split to <100MB per file)
